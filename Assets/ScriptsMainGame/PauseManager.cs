@@ -9,12 +9,6 @@ public class PauseManager : MonoBehaviour
     [SerializeField] GameObject GameUI;
     private bool OpenedPauseMenu = false;
 
-    private void Start()
-    {
-        GameUI.SetActive(true);
-        pauseMenu.SetActive(false);
-    }
-
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
