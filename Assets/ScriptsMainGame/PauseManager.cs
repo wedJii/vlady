@@ -1,5 +1,7 @@
 using System;
+using Unity.VectorGraphics;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PauseManager : MonoBehaviour
 {
@@ -21,24 +23,36 @@ public class PauseManager : MonoBehaviour
             {
                 ClosePauseMenu();
             }
-            if (!OpenedPauseMenu)
+            else
             {
                 OpenPauseMenu();
             }
         }
     }
-
-    void OpenPauseMenu()
+    
+    public void OpenPauseMenu()
     {
         pauseMenu.SetActive(true);
         GameUI.SetActive(false);
         OpenedPauseMenu = true;
+        Time.timeScale = 0;
     }
     
-    void ClosePauseMenu()
+    public void ClosePauseMenu()
     {
         pauseMenu.SetActive(false);
         GameUI.SetActive(true);
         OpenedPauseMenu = false;
+        Time.timeScale = 1;
+    }
+
+    public void GoToMainMenu()
+    {
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    public void QuitGame()
+    {
+        Application.Quit();
     }
 }
