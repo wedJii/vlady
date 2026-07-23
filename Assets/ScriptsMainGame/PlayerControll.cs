@@ -48,6 +48,10 @@ public class PlayerControll : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
     }
 
     void Start()
@@ -66,6 +70,9 @@ public class PlayerControll : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb.linearVelocity = movement * speed; 
+        if (rb != null)
+        {
+            rb.linearVelocity = movement * speed;
+        }
     }
 }
