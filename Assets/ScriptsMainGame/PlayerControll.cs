@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 public class PlayerControll : MonoBehaviour
 {
@@ -59,6 +60,10 @@ public class PlayerControll : MonoBehaviour
                 if (healthSlider != null)
                 {
                     healthSlider.value = _currentHealth_Player;
+                    if (!healthSlider.gameObject.activeSelf)
+                    {
+                        healthSlider.gameObject.SetActive(true);
+                    }
                 }
 
                 if (_currentHealth_Player <= 0 && !isDead)
@@ -78,12 +83,30 @@ public class PlayerControll : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        if (healthSlider != null)
+        {
+            healthSlider.maxValue = _maxHealth_Player;
+            healthSlider.value = _currentHealth_Player;
+            healthSlider.gameObject.SetActive(true);
+        }
+    }
+
     void Update()
     {
         if (isDead) return;
 
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+        float horizontal = 0f;
+        float vertical = 0f;
+
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) horizontal -= 1f;
+            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) horizontal += 1f;
+            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) vertical -= 1f;
+            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) vertical += 1f;
+        }
 
         movement = new Vector2(horizontal, vertical).normalized;
     }
@@ -97,6 +120,7 @@ public class PlayerControll : MonoBehaviour
             rb.linearVelocity = movement * speed;
         }
     }
+
     public void DamageShake()
     {
         if (cam == null) return;
@@ -139,13 +163,8 @@ public class PlayerControll : MonoBehaviour
             StopCoroutine(shakeCoroutine);
         }
 
-        if (healthSlider != null)
-        {
-            Destroy(healthSlider.gameObject);
-        }
-
         StartCoroutine(SmoothZoomToPlayer());
-        LosePanel.SetActive(true);
+        if (LosePanel != null) LosePanel.SetActive(true);
         Time.timeScale = 0;
     }
 

@@ -1,21 +1,29 @@
-using System;
 using System.Threading.Tasks;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public float damage;
-    private bool isPlayerTouched = false;
-    
+    [SerializeField] private float _damage = 10f;
+    private bool _isPlayerTouched;
+
+    public float damage
+    {
+        get => _damage;
+        set => _damage = value;
+    }
+
     private async void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.tag == "Player") 
+        if (other.CompareTag("Player"))
         {
-            isPlayerTouched = true;
-            while (isPlayerTouched)
+            _isPlayerTouched = true;
+            PlayerControll playerControl = other.GetComponent<PlayerControll>();
+            while (_isPlayerTouched && playerControl != null)
             {
-                other.GetComponent<PlayerControll>().currentHealth_Player -= damage;
+                if (Time.timeScale > 0f)
+                {
+                    playerControl.currentHealth_Player -= _damage;
+                }
                 await Task.Delay(1000);
             }
         }
@@ -23,6 +31,9 @@ public class Enemy : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.tag == "Player") isPlayerTouched = false;
+        if (other.CompareTag("Player"))
+        {
+            _isPlayerTouched = false;
+        }
     }
 }

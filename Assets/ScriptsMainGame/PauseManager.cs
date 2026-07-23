@@ -1,19 +1,27 @@
-using System;
-using Unity.VectorGraphics;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class PauseManager : MonoBehaviour
 {
-    [SerializeField] GameObject pauseMenu;
-    [SerializeField] GameObject GameUI;
-    private bool OpenedPauseMenu = false;
+    [SerializeField] private GameObject _pauseMenu;
+    [SerializeField] private GameObject _gameUI;
+    [SerializeField] private GameObject _losePanel;
+    private bool _openedPauseMenu;
 
-    void Update()
+    private void Start()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        Time.timeScale = 1f;
+        ClosePauseMenu();
+    }
+
+    private void Update()
+    {
+        if (_losePanel != null && _losePanel.activeSelf) return;
+
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            if (OpenedPauseMenu)
+            if (_openedPauseMenu)
             {
                 ClosePauseMenu();
             }
@@ -23,25 +31,34 @@ public class PauseManager : MonoBehaviour
             }
         }
     }
-    
+
     public void OpenPauseMenu()
     {
-        pauseMenu.SetActive(true);
-        GameUI.SetActive(false);
-        OpenedPauseMenu = true;
-        Time.timeScale = 0;
+        if (_losePanel != null && _losePanel.activeSelf) return;
+
+        if (_pauseMenu != null) _pauseMenu.SetActive(true);
+        if (_gameUI != null) _gameUI.SetActive(false);
+        _openedPauseMenu = true;
+        Time.timeScale = 0f;
     }
-    
+
     public void ClosePauseMenu()
     {
-        pauseMenu.SetActive(false);
-        GameUI.SetActive(true);
-        OpenedPauseMenu = false;
-        Time.timeScale = 1;
+        if (_pauseMenu != null) _pauseMenu.SetActive(false);
+        if (_gameUI != null && (_losePanel == null || !_losePanel.activeSelf)) _gameUI.SetActive(true);
+        _openedPauseMenu = false;
+        Time.timeScale = 1f;
+    }
+
+    public void Restart()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void GoToMainMenu()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
     }
 

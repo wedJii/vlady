@@ -10,8 +10,8 @@ public class MainMenu : MonoBehaviour
 
     private void Start()
     {
+        Time.timeScale = 1f;
         int savedIndex = PlayerPrefs.GetInt("SavedFPSIndex", 3);
-
         ChangeFrameRate(savedIndex);
         
         if (_fpsDropdown != null)
@@ -39,6 +39,7 @@ public class MainMenu : MonoBehaviour
 
     public void OnPlayClick()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene(_playSceneName);
     }
 
