@@ -1,17 +1,30 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerControll : MonoBehaviour
 {
-    [Header("Movement")]
-    public float speed = 5f;
+    [Header("Movement")] public float speed = 5f;
     private Rigidbody2D rb;
     private Vector2 movement;
 
     [Header("UI & Health")]
     [SerializeField] private Slider healthSlider;
-    private float _currentHealth_Player;
-    private float _maxHealth_Player;
+    [SerializeField] private GameObject LosePanel;
+    private float _currentHealth_Player = 100;
+    private float _maxHealth_Player = 100;
+
+    [Header("Camera Settings")]
+    [SerializeField] private Camera cam;
+    [SerializeField] private float targetZoomSize = 2.5f;
+    [SerializeField] private float zoomDuration = 1f;
+
+    [Header("Camera Shake Settings")]
+    [SerializeField] private float shakeDuration = 0.15f;
+    [SerializeField] private float shakeMagnitude = 0.2f;
+
+    private bool isDead = false;
+    private Coroutine shakeCoroutine;
 
     public float maxHealth_Player
     {
@@ -36,10 +49,21 @@ public class PlayerControll : MonoBehaviour
         {
             if (_currentHealth_Player != value)
             {
+                if (value < _currentHealth_Player && value > 0 && !isDead)
+                {
+                    DamageShake();
+                }
+
                 _currentHealth_Player = value;
+
                 if (healthSlider != null)
                 {
                     healthSlider.value = _currentHealth_Player;
+                }
+
+                if (_currentHealth_Player <= 0 && !isDead)
+                {
+                    Die();
                 }
             }
         }
@@ -54,14 +78,10 @@ public class PlayerControll : MonoBehaviour
         }
     }
 
-    void Start()
-    {
-        maxHealth_Player = 100f;
-        currentHealth_Player = 100f;
-    }
-
     void Update()
     {
+        if (isDead) return;
+
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
@@ -70,9 +90,88 @@ public class PlayerControll : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (isDead) return;
+
         if (rb != null)
         {
             rb.linearVelocity = movement * speed;
         }
+    }
+    public void DamageShake()
+    {
+        if (cam == null) return;
+        
+        if (shakeCoroutine != null)
+        {
+            StopCoroutine(shakeCoroutine);
+        }
+
+        shakeCoroutine = StartCoroutine(ShakeCameraRoutine());
+    }
+
+    private IEnumerator ShakeCameraRoutine()
+    {
+        Vector3 originalPos = cam.transform.localPosition;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < shakeDuration)
+        {
+            float offsetX = Random.Range(-1f, 1f) * shakeMagnitude;
+            float offsetY = Random.Range(-1f, 1f) * shakeMagnitude;
+
+            cam.transform.localPosition = new Vector3(originalPos.x + offsetX, originalPos.y + offsetY, originalPos.z);
+
+            elapsedTime += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        cam.transform.localPosition = originalPos;
+        shakeCoroutine = null;
+    }
+
+    private void Die()
+    {
+        isDead = true;
+
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+        
+        if (shakeCoroutine != null)
+        {
+            StopCoroutine(shakeCoroutine);
+        }
+
+        if (healthSlider != null)
+        {
+            Destroy(healthSlider.gameObject);
+        }
+
+        StartCoroutine(SmoothZoomToPlayer());
+        LosePanel.SetActive(true);
+        Time.timeScale = 0;
+    }
+
+    private IEnumerator SmoothZoomToPlayer()
+    {
+        if (cam == null) yield break;
+
+        float elapsedTime = 0f;
+        float startSize = cam.orthographicSize;
+        Vector3 startPos = cam.transform.position;
+
+        Vector3 targetPos = new Vector3(transform.position.x, transform.position.y, startPos.z);
+
+        while (elapsedTime < zoomDuration)
+        {
+            elapsedTime += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsedTime / zoomDuration);
+            float smoothT = 1f - Mathf.Pow(1f - t, 3);
+
+            cam.orthographicSize = Mathf.Lerp(startSize, targetZoomSize, smoothT);
+            cam.transform.position = Vector3.Lerp(startPos, targetPos, smoothT);
+
+            yield return null;
+        }
+
+        cam.orthographicSize = targetZoomSize;
+        cam.transform.position = targetPos;
     }
 }

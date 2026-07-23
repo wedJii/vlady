@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro; // 1. Подключаем TextMeshPro для работы с TMP_Dropdown
+using TMPro;
 
 public class MainMenu : MonoBehaviour
 {

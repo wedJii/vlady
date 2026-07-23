@@ -176,7 +176,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'FrameRate: 60'
+  m_text: 'FrameRate: Unlimited'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -809,7 +809,7 @@ MonoBehaviour:
   m_Placeholder: {fileID: 0}
   m_ItemText: {fileID: 306165210}
   m_ItemImage: {fileID: 0}
-  m_Value: 0
+  m_Value: 3
   m_MultiSelect: 0
   m_Options:
     m_Options:
@@ -822,9 +822,24 @@ MonoBehaviour:
     - m_Text: 'FrameRate: 240'
       m_Image: {fileID: 0}
       m_Color: {r: 1, g: 1, b: 1, a: 1}
+    - m_Text: 'FrameRate: Unlimited'
+      m_Image: {fileID: 0}
+      m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1684411631}
+        m_TargetAssemblyTypeName: MainMenu, Assembly-CSharp
+        m_MethodName: ChangeFrameRate
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_AlphaFadeSpeed: 0.15
 --- !u!114 &427776018
 MonoBehaviour:
@@ -1846,7 +1861,7 @@ GameObject:
   - component: {fileID: 1637184041}
   - component: {fileID: 1637184040}
   m_Layer: 0
-  m_Name: TitleText
+  m_Name: MenuTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2191,6 +2206,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainMenu
   _playSceneName: SampleScene
   _settingsPanel: {fileID: 889510243}
+  _fpsDropdown: {fileID: 427776017}
 --- !u!114 &1684411632
 MonoBehaviour:
   m_ObjectHideFlags: 0
