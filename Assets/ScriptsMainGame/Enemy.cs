@@ -1,9 +1,11 @@
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class Enemy : MonoBehaviour
 {
+    private WavesManager wavesManager;
     private float _currentHealth_Enemy = 100;
     public float currentHealth_Enemy
     {
@@ -21,6 +23,11 @@ public class Enemy : MonoBehaviour
 
                 if (_currentHealth_Enemy <= 0)
                 {
+                    wavesManager.enemyLeft--;
+                    if (wavesManager.enemyLeft == 0)
+                    {
+                        wavesManager.UbgradePanel.SetActive(true);
+                    }
                     Destroy(gameObject);
                 }
             }
@@ -47,7 +54,12 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float _damage = 10f;
     [SerializeField] private Slider healthSlider_Enemy;
     private bool _isPlayerTouched;
-    
+
+    private void Awake()
+    {
+        wavesManager = FindObjectOfType<WavesManager>();
+    }
+
     private async void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
