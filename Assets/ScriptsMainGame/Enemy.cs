@@ -1,28 +1,65 @@
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Enemy : MonoBehaviour
 {
-    [SerializeField] private float _damage = 10f;
-    private bool _isPlayerTouched;
-
-    public float damage
+    private float _currentHealth_Enemy = 100;
+    public float currentHealth_Enemy
     {
-        get => _damage;
-        set => _damage = value;
+        get => _currentHealth_Enemy;
+        set
+        {
+            if (_currentHealth_Enemy != value)
+            {
+                _currentHealth_Enemy = value;
+
+                if (healthSlider_Enemy != null)
+                {
+                    healthSlider_Enemy.value = _currentHealth_Enemy;
+                }
+
+                if (_currentHealth_Enemy <= 0)
+                {
+                    Destroy(gameObject);
+                }
+            }
+        }
     }
 
+    private float _maxHealth_Enemy = 100;
+    public float maxHealth_Enemy
+    {
+        get => _maxHealth_Enemy;
+        set
+        {
+            if (_maxHealth_Enemy != value)
+            {
+                _maxHealth_Enemy = value;
+                if (healthSlider_Enemy != null) 
+                {
+                    healthSlider_Enemy.maxValue = _maxHealth_Enemy;
+                }
+            }
+        }
+    }
+
+    [SerializeField] private float _damage = 10f;
+    [SerializeField] private Slider healthSlider_Enemy;
+    private bool _isPlayerTouched;
+    
     private async void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
         {
+            await Task.Delay(250);
             _isPlayerTouched = true;
-            PlayerControll playerControl = other.GetComponent<PlayerControll>();
-            while (_isPlayerTouched && playerControl != null)
+    
+            while (_isPlayerTouched)
             {
                 if (Time.timeScale > 0f)
                 {
-                    playerControl.currentHealth_Player -= _damage;
+                   other.GetComponent<PlayerControll>().currentHealth_Player -= _damage;
                 }
                 await Task.Delay(1000);
             }

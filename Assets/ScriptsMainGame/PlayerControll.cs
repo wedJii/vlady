@@ -26,6 +26,15 @@ public class PlayerControll : MonoBehaviour
 
     private bool isDead = false;
     private Coroutine shakeCoroutine;
+    
+    [Header("Bullet Settings")]
+    public float bulletSpeed = 10f;
+    public float bulletDamage = 10f;
+    public float shootCooldown = 0.3f;
+    private float nextShootTime = 0f; 
+    [SerializeField] private GameObject bulletPrefab;
+    private Bullet bulletScript;
+    public Vector3 mouseWorldPos;
 
     public float maxHealth_Player
     {
@@ -97,18 +106,16 @@ public class PlayerControll : MonoBehaviour
     {
         if (isDead) return;
 
-        float horizontal = 0f;
-        float vertical = 0f;
-
-        if (Keyboard.current != null)
-        {
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) horizontal -= 1f;
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) horizontal += 1f;
-            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) vertical -= 1f;
-            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) vertical += 1f;
-        }
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");    
 
         movement = new Vector2(horizontal, vertical).normalized;
+
+        // Проверяем нажатие ЛКМ и готовность кулдауна
+        if (Input.GetMouseButtonDown(0) && Time.time >= nextShootTime)
+        {
+           Shoot();
+        }
     }
 
     void FixedUpdate()
@@ -192,5 +199,11 @@ public class PlayerControll : MonoBehaviour
 
         cam.orthographicSize = targetZoomSize;
         cam.transform.position = targetPos;
+    }
+
+    public void Shoot()
+    {
+        nextShootTime = Time.time + shootCooldown;
+        Instantiate(bulletPrefab, transform.position, Quaternion.identity);
     }
 }
