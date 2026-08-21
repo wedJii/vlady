@@ -1,10 +1,12 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using DG.Tweening;
 using TMPro;
 
 public class MainMenu : MonoBehaviour
 {
-    [SerializeField] private string _playSceneName = "SampleScene";
+    private Tween currentTween;
+    [SerializeField] private string _Dungeon1SceneName = "Dungeon 1";
     [SerializeField] private GameObject _settingsPanel;
     [SerializeField] private TMP_Dropdown _fpsDropdown;
 
@@ -40,7 +42,7 @@ public class MainMenu : MonoBehaviour
     public void OnPlayClick()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(_playSceneName);
+        SceneManager.LoadScene(_Dungeon1SceneName);
     }
 
     public void OnSettingsClick()
@@ -58,5 +60,17 @@ public class MainMenu : MonoBehaviour
     public void OnExitClick()
     {
         Application.Quit();
+    }
+    
+    public void OnMouseEnterIncreaseBTN(GameObject button)
+    {
+        button.transform.DOKill();
+        button.transform.DOScale(button.transform.localScale * 1.2f, 0.25f).SetEase(Ease.OutQuad);
+    }
+    
+    public void OnMouseExitDecreaseBTN(GameObject button)
+    {
+        button.transform.DOKill();
+        button.transform.DOScale(button.transform.localScale / 1.2f, 0.25f).SetEase(Ease.OutQuad);
     }
 }
