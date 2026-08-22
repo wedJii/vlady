@@ -61,16 +61,4 @@ public class MainMenu : MonoBehaviour
     {
         Application.Quit();
     }
-    
-    public void OnMouseEnterIncreaseBTN(GameObject button)
-    {
-        button.transform.DOKill();
-        button.transform.DOScale(button.transform.localScale * 1.2f, 0.25f).SetEase(Ease.OutQuad);
-    }
-    
-    public void OnMouseExitDecreaseBTN(GameObject button)
-    {
-        button.transform.DOKill();
-        button.transform.DOScale(button.transform.localScale / 1.2f, 0.25f).SetEase(Ease.OutQuad);
-    }
 }
