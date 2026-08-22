@@ -2,29 +2,25 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using DG.Tweening;
 
-// Этот скрипт вешается ПРЯМО НА КНОПКУ и сам отслеживает мышку
-public class ButtonAnimationDOTween : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class ScaleOnHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     private Vector3 originalSize;
-    private float speed = 0.25f;
-    private float scaleMultiplier = 1.1f;
 
     private void Awake()
     {
-        // Запоминаем родной размер кнопки один раз при старте
         originalSize = transform.localScale;
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
         transform.DOKill();
-        transform.DOScale(originalSize * scaleMultiplier, speed);
+        transform.DOScale(originalSize * 1.1f, 0.25f).SetUpdate(true);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         transform.DOKill();
-        transform.DOScale(originalSize, speed);
+        transform.DOScale(originalSize, 0.25f).SetUpdate(true);
     }
 
     private void OnDisable()
@@ -32,5 +28,4 @@ public class ButtonAnimationDOTween : MonoBehaviour, IPointerEnterHandler, IPoin
         transform.DOKill();
         transform.localScale = originalSize;
     }
-}    
-    
+}

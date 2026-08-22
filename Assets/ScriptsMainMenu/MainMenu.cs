@@ -8,6 +8,7 @@ public class MainMenu : MonoBehaviour
     private Tween currentTween;
     [SerializeField] private string _Dungeon1SceneName = "Dungeon 1";
     [SerializeField] private GameObject _settingsPanel;
+    [SerializeField] private GameObject _MainMenuPanel;
     [SerializeField] private TMP_Dropdown _fpsDropdown;
 
     private void Start()
@@ -48,13 +49,20 @@ public class MainMenu : MonoBehaviour
     public void OnSettingsClick()
     {
         if (_settingsPanel != null)
+        {
             _settingsPanel.SetActive(true);
+            _MainMenuPanel.SetActive(false);
+        }
+            
     }
 
     public void OnCloseSettingsClick()
     {
         if (_settingsPanel != null)
+        {
             _settingsPanel.SetActive(false);
+            _MainMenuPanel.SetActive(true);
+        }    
     }
 
     public void OnExitClick()
