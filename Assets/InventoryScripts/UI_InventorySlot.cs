@@ -2,86 +2,161 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
+using DG.Tweening;
 
-public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+[RequireComponent(typeof(CanvasGroup))]
+public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    public Image icon;
-    public TextMeshProUGUI amountText;
+    [SerializeField] private Image icon;
+    [SerializeField] private TextMeshProUGUI amountText;
 
-    [HideInInspector] public int slotIndex; // Индекс этого слота в массиве
-    private UI_Inventory uiInventory;
-    private Transform originalParent;
+    private int _slotIndex;
+    private UI_Inventory _uiInventory;
+    private CanvasGroup _canvasGroup;
+    private Tween _hoverTween;
+
+    private CanvasGroup CanvasGroup
+    {
+        get
+        {
+            if (_canvasGroup == null)
+            {
+                _canvasGroup = GetComponent<CanvasGroup>();
+                if (_canvasGroup == null) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            }
+            return _canvasGroup;
+        }
+    }
+
+    private void Awake()
+    {
+        EnsureComponents();
+    }
+
+    private void EnsureComponents()
+    {
+        if (icon == null)
+        {
+            var iconTr = transform.Find("Icon");
+            if (iconTr != null) icon = iconTr.GetComponent<Image>();
+            if (icon == null) icon = GetComponentInChildren<Image>();
+        }
+
+        if (amountText == null)
+            amountText = transform.Find("AmountText")?.GetComponent<TextMeshProUGUI>();
+
+        if (amountText != null)
+            amountText.color = Color.white;
+
+        if (_canvasGroup == null)
+        {
+            _canvasGroup = GetComponent<CanvasGroup>();
+            if (_canvasGroup == null) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
+    }
 
     public void Init(UI_Inventory uiInv, int index)
     {
-        uiInventory = uiInv;
-        slotIndex = index;
+        EnsureComponents();
+        _uiInventory = uiInv;
+        _slotIndex = index;
     }
 
     public void Render(InventorySlot slot)
     {
-        if (slot != null && slot.item != null)
-        {
-            icon.sprite = slot.item.icon;
-            icon.enabled = true;
+        EnsureComponents();
 
-            if (slot.item.isStackable && slot.amount > 1)
+        if (slot != null && !slot.IsEmpty && slot.item != null)
+        {
+            if (icon != null)
             {
-                amountText.text = slot.amount.ToString();
-                amountText.enabled = true;
+                icon.sprite = slot.item.icon;
+                icon.enabled = true; // Показываем иконку (если спрайта нет, Unity отобразит белый тестовый квадрат)
+                icon.color = Color.white;
             }
-            else
+
+            if (amountText != null)
             {
-                amountText.enabled = false;
+                bool showCount = slot.amount > 1;
+                amountText.text = showCount ? slot.amount.ToString() : "";
+                amountText.color = Color.white;
+                amountText.enabled = showCount;
             }
         }
         else
         {
-            icon.enabled = false;
-            amountText.enabled = false;
+            if (icon != null)
+            {
+                icon.sprite = null;
+                icon.enabled = false;
+            }
+            if (amountText != null)
+            {
+                amountText.text = "";
+                amountText.enabled = false;
+            }
         }
     }
 
-    // --- Начало перетаскивания ---
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        _hoverTween?.Kill();
+        _hoverTween = transform.DOScale(1.08f, 0.15f).SetUpdate(true);
+
+        if (_uiInventory != null && _uiInventory.Inventory != null && _slotIndex < _uiInventory.Inventory.Slots.Count)
+        {
+            var slot = _uiInventory.Inventory.Slots[_slotIndex];
+            if (slot != null && !slot.IsEmpty && slot.item != null)
+            {
+                UI_ItemTooltip.Show(slot.item);
+            }
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        _hoverTween?.Kill();
+        _hoverTween = transform.DOScale(1f, 0.15f).SetUpdate(true);
+        UI_ItemTooltip.Hide();
+    }
+
     public void OnBeginDrag(PointerEventData eventData)
     {
-        // Проверяем, есть ли предмет в слоте
-        if (uiInventory.inventory.slots[slotIndex].item == null) return;
+        UI_ItemTooltip.Hide();
 
-        originalParent = icon.transform.parent;
-        // Переносим иконку на самую верхнюю панель Canvas, чтобы она отображалась ПОВЕРХ всех слотов
-        icon.transform.SetParent(uiInventory.transform.root);
-        icon.raycastTarget = false; // Отключаем Raycast, чтобы мышка "видела" слот под иконкой
+        if (_uiInventory == null || _uiInventory.Inventory == null) return;
+        if (_slotIndex >= _uiInventory.Inventory.Slots.Count) return;
+
+        var slot = _uiInventory.Inventory.Slots[_slotIndex];
+        if (slot == null || slot.IsEmpty || slot.item == null) return;
+
+        if (icon != null)
+            icon.color = new Color(1f, 1f, 1f, 0.4f);
+
+        CanvasGroup.blocksRaycasts = false;
+        _uiInventory.ShowDragGhost(slot.item.icon, icon != null ? icon.rectTransform.sizeDelta : new Vector2(50, 50));
     }
-    
+
     public void OnDrag(PointerEventData eventData)
     {
-        if (uiInventory.inventory.slots[slotIndex].item == null) return;
-        
-        icon.transform.position = Input.mousePosition;
+        _uiInventory?.UpdateDragGhostPosition(eventData.position);
     }
 
-    // --- Конец перетаскивания ---
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (uiInventory.inventory.slots[slotIndex].item == null) return;
-        
-        icon.transform.SetParent(originalParent);
-        icon.transform.localPosition = Vector3.zero;
-        icon.raycastTarget = true;
-        
-        uiInventory.UpdateUI();
+        if (icon != null)
+            icon.color = Color.white;
+
+        CanvasGroup.blocksRaycasts = true;
+        _uiInventory?.HideDragGhost();
     }
+
     public void OnDrop(PointerEventData eventData)
     {
-        GameObject droppedObj = eventData.pointerDrag;
-        if (droppedObj != null)
+        var draggedSlot = eventData.pointerDrag?.GetComponent<UI_InventorySlot>();
+        if (draggedSlot != null && _uiInventory != null)
         {
-            UI_InventorySlot fromSlot = droppedObj.GetComponent<UI_InventorySlot>();
-            if (fromSlot != null)
-            {
-                uiInventory.SwapSlots(fromSlot.slotIndex, this.slotIndex);
-            }
+            _uiInventory.SwapOrMerge(draggedSlot._slotIndex, this._slotIndex);
         }
     }
 }

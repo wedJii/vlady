@@ -1,57 +1,114 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    public int capacity = 20;
-    public List<InventorySlot> slots = new List<InventorySlot>();
+    [SerializeField] private int capacity = 20;
+    [SerializeField] private List<InventorySlot> slots = new();
+
+    public int Capacity => capacity;
+    public IReadOnlyList<InventorySlot> Slots => slots;
+    public event Action OnInventoryChanged;
 
     private void Awake()
     {
-        for (int i = 0; i < capacity; i++)
-        {
-            slots.Add(new InventorySlot(null, 0));
-        }
+        EnsureCapacity();
     }
-    
-    public bool AddItem(Item item, int amount)
+
+    private void EnsureCapacity()
     {
+        if (slots == null) slots = new List<InventorySlot>();
+        while (slots.Count < capacity) slots.Add(new InventorySlot());
+        while (slots.Count > capacity) slots.RemoveAt(slots.Count - 1);
+    }
+
+    public bool AddItem(Item item, int amount = 1)
+    {
+        if (item == null || amount <= 0) return false;
+        EnsureCapacity();
+
+        // 1. Складываем в существующие неполные стаки
         if (item.isStackable)
         {
             foreach (var slot in slots)
             {
                 if (slot.item == item && slot.amount < item.maxStack)
                 {
-                    int spaceInSlot = item.maxStack - slot.amount;
-                    int amountToAdd = Mathf.Min(amount, spaceInSlot);
-                    
-                    slot.AddAmount(amountToAdd);
-                    amount -= amountToAdd;
+                    int space = item.maxStack - slot.amount;
+                    int add = Mathf.Min(amount, space);
+                    slot.Add(add);
+                    amount -= add;
 
-                    if (amount <= 0) return true;
+                    if (amount <= 0)
+                    {
+                        OnInventoryChanged?.Invoke();
+                        return true;
+                    }
                 }
             }
         }
-        
-        while (amount > 0)
-        {
-            InventorySlot emptySlot = GetEmptySlot();
-            if (emptySlot == null) return false;
 
-            int amountToAdd = item.isStackable ? Mathf.Min(amount, item.maxStack) : 1;
-            emptySlot.item = item;
-            emptySlot.amount = amountToAdd;
-            amount -= amountToAdd;
-        }
-
-        return true;
-    }
-    private InventorySlot GetEmptySlot()
-    {
+        // 2. Раскладываем остаток в пустые слоты
         foreach (var slot in slots)
         {
-            if (slot.item == null) return slot;
+            if (slot.IsEmpty)
+            {
+                int add = item.isStackable ? Mathf.Min(amount, item.maxStack) : 1;
+                slot.Set(item, add);
+                amount -= add;
+
+                if (amount <= 0)
+                {
+                    OnInventoryChanged?.Invoke();
+                    return true;
+                }
+            }
         }
-        return null;
+
+        OnInventoryChanged?.Invoke();
+        return amount <= 0;
+    }
+
+    public void MoveOrMerge(int fromIndex, int toIndex)
+    {
+        if (fromIndex == toIndex || fromIndex < 0 || fromIndex >= slots.Count || toIndex < 0 || toIndex >= slots.Count)
+            return;
+
+        var from = slots[fromIndex];
+        var to = slots[toIndex];
+
+        if (from.IsEmpty) return;
+
+        // Если оба слота содержат одинаковый стакаемый предмет -> объединяем стаки
+        if (!to.IsEmpty && from.item == to.item && to.item.isStackable)
+        {
+            int space = to.item.maxStack - to.amount;
+            if (space > 0)
+            {
+                int moveAmount = Mathf.Min(from.amount, space);
+                to.Add(moveAmount);
+                from.amount -= moveAmount;
+                if (from.amount <= 0) from.Clear();
+                OnInventoryChanged?.Invoke();
+                return;
+            }
+        }
+
+        // Иначе меняем местами слоты
+        slots[fromIndex] = to;
+        slots[toIndex] = from;
+        OnInventoryChanged?.Invoke();
+    }
+
+    public void RemoveAt(int slotIndex, int amount = 1)
+    {
+        if (slotIndex < 0 || slotIndex >= slots.Count) return;
+        var slot = slots[slotIndex];
+        if (slot.IsEmpty) return;
+
+        slot.amount -= amount;
+        if (slot.amount <= 0) slot.Clear();
+        OnInventoryChanged?.Invoke();
     }
 }

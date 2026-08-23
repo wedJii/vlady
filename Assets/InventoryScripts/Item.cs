@@ -5,7 +5,8 @@ public class Item : ScriptableObject
 {
     public string id;
     public string displayName;
-    public Sprite icon;         
-    public bool isStackable;
-    public int maxStack;   
+    public Sprite icon;
+    [TextArea(2, 4)] public string description;
+    public bool isStackable = true;
+    public int maxStack = 99;
 }
