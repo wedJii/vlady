@@ -12,18 +12,19 @@ public class UI_Inventory : MonoBehaviour
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private Transform slotsParent;
     [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
-    [SerializeField] private bool startOpen = true;
+    [SerializeField] private bool startOpen = false;
 
     private readonly List<UI_InventorySlot> _uiSlots = new();
     private Image _dragGhostImage;
     private Canvas _canvas;
     private CanvasGroup _canvasGroup;
-    private bool _isOpen = true;
+    private bool _isOpen = false;
     private Tween _scaleTween;
     private Tween _fadeTween;
 
     public Inventory Inventory => inventory;
     public Canvas Canvas => _canvas;
+    public bool IsOpen => _isOpen;
 
     private CanvasGroup CanvasGroup
     {
@@ -50,6 +51,12 @@ public class UI_Inventory : MonoBehaviour
         if (inventory == null)
             inventory = FindFirstObjectByType<Inventory>();
 
+        if (inventory != null)
+        {
+            inventory.OnInventoryChanged -= UpdateUI;
+            inventory.OnInventoryChanged += UpdateUI;
+        }
+
         InitUI();
 
         _isOpen = startOpen;
@@ -72,7 +79,10 @@ public class UI_Inventory : MonoBehaviour
     private void OnEnable()
     {
         if (inventory != null)
+        {
+            inventory.OnInventoryChanged -= UpdateUI;
             inventory.OnInventoryChanged += UpdateUI;
+        }
     }
 
     private void OnDisable()
@@ -116,12 +126,14 @@ public class UI_Inventory : MonoBehaviour
     {
         var ghostObj = new GameObject("DragGhost", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
         ghostObj.transform.SetParent(_canvas != null ? _canvas.transform : transform.root, false);
+        ghostObj.hideFlags = HideFlags.HideInHierarchy;
 
         _dragGhostImage = ghostObj.GetComponent<Image>();
         _dragGhostImage.raycastTarget = false;
 
         var cg = ghostObj.GetComponent<CanvasGroup>();
         cg.blocksRaycasts = false;
+        cg.interactable = false;
 
         ghostObj.SetActive(false);
     }
@@ -194,6 +206,9 @@ public class UI_Inventory : MonoBehaviour
     public void SwapOrMerge(int fromIndex, int toIndex)
     {
         if (inventory != null)
+        {
             inventory.MoveOrMerge(fromIndex, toIndex);
+            UpdateUI();
+        }
     }
 }

@@ -95,9 +95,12 @@ public class Inventory : MonoBehaviour
             }
         }
 
-        // Иначе меняем местами слоты
-        slots[fromIndex] = to;
-        slots[toIndex] = from;
+        // Иначе меняем местами содержимое слотов
+        var tempItem = from.item;
+        var tempAmount = from.amount;
+        from.Set(to.item, to.amount);
+        to.Set(tempItem, tempAmount);
+
         OnInventoryChanged?.Invoke();
     }
 

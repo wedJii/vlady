@@ -106,21 +106,38 @@ public class PlayerControll : MonoBehaviour
     {
         if (isDead) return;
 
+        // Блокируем управление, если открыт инвентарь
+        if (UI_Inventory.Instance != null && UI_Inventory.Instance.IsOpen)
+        {
+            movement = Vector2.zero;
+            return;
+        }
+
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");    
 
         movement = new Vector2(horizontal, vertical).normalized;
 
-        // Проверяем нажатие ЛКМ и готовность кулдауна
+        // Проверяем нажатие ЛКМ, готовность кулдауна и отсутствие клика по UI
         if (Input.GetMouseButtonDown(0) && Time.time >= nextShootTime)
         {
-           Shoot();
+            if (UnityEngine.EventSystems.EventSystem.current != null && 
+                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+                return;
+
+            Shoot();
         }
     }
 
     void FixedUpdate()
     {
         if (isDead) return;
+
+        if (UI_Inventory.Instance != null && UI_Inventory.Instance.IsOpen)
+        {
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+            return;
+        }
 
         if (rb != null)
         {

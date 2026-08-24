@@ -71,7 +71,7 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
             if (icon != null)
             {
                 icon.sprite = slot.item.icon;
-                icon.enabled = true; // Показываем иконку (если спрайта нет, Unity отобразит белый тестовый квадрат)
+                icon.enabled = true;
                 icon.color = Color.white;
             }
 
@@ -131,7 +131,7 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         if (slot == null || slot.IsEmpty || slot.item == null) return;
 
         if (icon != null)
-            icon.color = new Color(1f, 1f, 1f, 0.4f);
+            icon.color = new Color(1f, 1f, 1f, 0.3f);
 
         CanvasGroup.blocksRaycasts = false;
         _uiInventory.ShowDragGhost(slot.item.icon, icon != null ? icon.rectTransform.sizeDelta : new Vector2(50, 50));
@@ -149,12 +149,17 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
         CanvasGroup.blocksRaycasts = true;
         _uiInventory?.HideDragGhost();
+        _uiInventory?.UpdateUI();
     }
 
     public void OnDrop(PointerEventData eventData)
     {
-        var draggedSlot = eventData.pointerDrag?.GetComponent<UI_InventorySlot>();
-        if (draggedSlot != null && _uiInventory != null)
+        if (eventData.pointerDrag == null || _uiInventory == null) return;
+
+        var draggedSlot = eventData.pointerDrag.GetComponent<UI_InventorySlot>() ?? 
+                          eventData.pointerDrag.GetComponentInParent<UI_InventorySlot>();
+
+        if (draggedSlot != null)
         {
             _uiInventory.SwapOrMerge(draggedSlot._slotIndex, this._slotIndex);
         }

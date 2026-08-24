@@ -3,18 +3,90 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D))]
 public class ItemPickup : MonoBehaviour
 {
-    [SerializeField] private Item _item;
-    [SerializeField] private int _amount = 1;
+    [SerializeField] private Item item;
+    [SerializeField] private int amount = 1;
+    [SerializeField] private bool bobbingAnimation = true;
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private Vector3 _startPos;
+    private SpriteRenderer _spriteRenderer;
+    private bool _isPickedUp = false;
+
+    private void Awake()
     {
-        if (other.CompareTag("Player"))
+        _startPos = transform.position;
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+
+        var col = GetComponent<Collider2D>();
+        if (col != null) col.isTrigger = true;
+
+        UpdateVisuals();
+    }
+
+    private void Update()
+    {
+        if (bobbingAnimation && !_isPickedUp)
         {
-            var inventory = other.GetComponent<Inventory>() ?? FindFirstObjectByType<Inventory>();
-            if (inventory != null && inventory.AddItem(_item, _amount))
-            {
-                Destroy(gameObject);
-            }
+            float yOffset = Mathf.Sin(Time.time * 3f) * 0.08f;
+            transform.position = _startPos + new Vector3(0f, yOffset, 0f);
         }
+    }
+
+    private void UpdateVisuals()
+    {
+        if (_spriteRenderer != null && item != null && item.icon != null)
+        {
+            _spriteRenderer.sprite = item.icon;
+        }
+    }
+
+    private void TryPickup(GameObject target)
+    {
+        if (_isPickedUp) return;
+
+        bool isPlayer = target.CompareTag("Player") || 
+                        target.GetComponent<PlayerControll>() != null || 
+                        target.GetComponentInParent<PlayerControll>() != null ||
+                        target.name.ToLower().Contains("player");
+
+        if (!isPlayer) return;
+
+        if (item == null)
+        {
+            Debug.LogError($"<color=red>[ItemPickup]</color> На объекте {gameObject.name} в поле 'Item' не назначен предмет!", gameObject);
+            return;
+        }
+
+        var inventory = target.GetComponent<Inventory>() ?? 
+                        target.GetComponentInParent<Inventory>() ?? 
+                        UI_Inventory.Instance?.Inventory ?? 
+                        FindFirstObjectByType<Inventory>();
+
+        if (inventory == null)
+        {
+            Debug.LogError("<color=red>[ItemPickup]</color> В сцене не найден компонент Inventory! Создай объект InventoryManager и добавь скрипт Inventory.", gameObject);
+            return;
+        }
+
+        if (inventory.AddItem(item, amount))
+        {
+            _isPickedUp = true;
+            UI_Inventory.Instance?.UpdateUI();
+            Debug.Log($"<color=green>[ItemPickup]</color> Успешно подобран: {item.displayName} x{amount}");
+            Destroy(gameObject);
+        }
+        else
+        {
+            Debug.LogWarning("<color=yellow>[ItemPickup]</color> Инвентарь полон!");
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other) => TryPickup(other.gameObject);
+    private void OnTriggerStay2D(Collider2D other) => TryPickup(other.gameObject);
+    private void OnCollisionEnter2D(Collision2D collision) => TryPickup(collision.gameObject);
+
+    private void OnValidate()
+    {
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+        UpdateVisuals();
     }
 }
