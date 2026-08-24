@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 464453da69b84574d8e31ae742f5439d, type: 3}
   m_Name: TEST
   m_EditorClassIdentifier: Assembly-CSharp::Item
-  id: 
+  id: dildo
   displayName: test
   icon: {fileID: 0}
   description: 
