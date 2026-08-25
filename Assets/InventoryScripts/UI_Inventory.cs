@@ -12,7 +12,6 @@ public class UI_Inventory : MonoBehaviour
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private Transform slotsParent;
     [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
-    [SerializeField] private bool startOpen = false;
 
     private readonly List<UI_InventorySlot> _uiSlots = new();
     private Image _dragGhostImage;
@@ -44,6 +43,13 @@ public class UI_Inventory : MonoBehaviour
         Instance = this;
         _canvas = GetComponentInParent<Canvas>();
         CreateDragGhost();
+
+        // Всегда скрываем инвентарь при старте игры
+        _isOpen = false;
+        CanvasGroup.alpha = 0f;
+        CanvasGroup.blocksRaycasts = false;
+        CanvasGroup.interactable = false;
+        transform.localScale = Vector3.one * 0.7f;
     }
 
     private void Start()
@@ -58,22 +64,6 @@ public class UI_Inventory : MonoBehaviour
         }
 
         InitUI();
-
-        _isOpen = startOpen;
-        if (!startOpen)
-        {
-            CanvasGroup.alpha = 0f;
-            CanvasGroup.blocksRaycasts = false;
-            CanvasGroup.interactable = false;
-            transform.localScale = Vector3.one * 0.7f;
-        }
-        else
-        {
-            CanvasGroup.alpha = 1f;
-            CanvasGroup.blocksRaycasts = true;
-            CanvasGroup.interactable = true;
-            transform.localScale = Vector3.one;
-        }
     }
 
     private void OnEnable()
