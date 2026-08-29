@@ -61,7 +61,7 @@ public class LobbyMenuManager : MonoBehaviour
 
     public void StartRaid()
     {
-        RaidLoadoutManager.SaveLoadout(stashInventory, raidInventory);
+        RaidLoadoutManager.StartRaidSession(stashInventory, raidInventory);
         Time.timeScale = 1f;
         SceneManager.LoadScene(dungeonSceneName);
     }

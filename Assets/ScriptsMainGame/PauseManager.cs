@@ -53,19 +53,20 @@ public class PauseManager : MonoBehaviour
     public void Restart()
     {
         Time.timeScale = 1f;
+        RaidLoadoutManager.OnPlayerDied();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void GoToMainMenu()
     {
         Time.timeScale = 1f;
-        var inv = FindFirstObjectByType<Inventory>();
-        if (inv != null) RaidLoadoutManager.SaveDungeonLoot(inv);
+        RaidLoadoutManager.OnRaidAbandoned();
         SceneManager.LoadScene("MainMenu");
     }
 
     public void QuitGame()
     {
+        RaidLoadoutManager.OnRaidAbandoned();
         Application.Quit();
     }
 }

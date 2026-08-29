@@ -83,9 +83,12 @@ public class PlayerControll : MonoBehaviour
         }
     }
 
+    private SpriteRenderer _sr;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        _sr = GetComponent<SpriteRenderer>();
         if (rb != null)
         {
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;

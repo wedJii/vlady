@@ -19,6 +19,6 @@ public class DungeonRaidInitializer : MonoBehaviour
     public void SaveCurrentLoot()
     {
         if (dungeonInventory != null)
-            RaidLoadoutManager.SaveDungeonLoot(dungeonInventory);
+            RaidLoadoutManager.OnSuccessfulExtraction(dungeonInventory);
     }
 }
