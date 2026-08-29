@@ -179,6 +179,7 @@ public class PlayerControll : MonoBehaviour
     private void Die()
     {
         isDead = true;
+        RaidLoadoutManager.OnPlayerDied();
 
         if (rb != null) rb.linearVelocity = Vector2.zero;
         

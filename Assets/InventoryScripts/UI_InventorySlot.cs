@@ -5,7 +5,7 @@ using TMPro;
 using DG.Tweening;
 
 [RequireComponent(typeof(CanvasGroup))]
-public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
+public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [SerializeField] private Image icon;
     [SerializeField] private TextMeshProUGUI amountText;
@@ -15,23 +15,12 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
     private CanvasGroup _canvasGroup;
     private Tween _hoverTween;
 
-    private CanvasGroup CanvasGroup
-    {
-        get
-        {
-            if (_canvasGroup == null)
-            {
-                _canvasGroup = GetComponent<CanvasGroup>();
-                if (_canvasGroup == null) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
-            }
-            return _canvasGroup;
-        }
-    }
+    public UI_Inventory UIInventory => _uiInventory;
+    public int SlotIndex => _slotIndex;
 
-    private void Awake()
-    {
-        EnsureComponents();
-    }
+    private CanvasGroup CanvasGroup => _canvasGroup ??= (GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>());
+
+    private void Awake() => EnsureComponents();
 
     private void EnsureComponents()
     {
@@ -47,12 +36,6 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
         if (amountText != null)
             amountText.color = Color.white;
-
-        if (_canvasGroup == null)
-        {
-            _canvasGroup = GetComponent<CanvasGroup>();
-            if (_canvasGroup == null) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
-        }
     }
 
     public void Init(UI_Inventory uiInv, int index)
@@ -70,17 +53,26 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         {
             if (icon != null)
             {
-                icon.sprite = slot.item.icon;
-                icon.enabled = true;
-                icon.color = Color.white;
+                if (slot.item.icon != null)
+                {
+                    icon.sprite = slot.item.icon;
+                    icon.color = Color.white;
+                    icon.enabled = true;
+                }
+                else
+                {
+                    icon.sprite = null;
+                    icon.color = new Color(0.2f, 0.55f, 0.85f, 0.9f);
+                    icon.enabled = true;
+                }
             }
 
             if (amountText != null)
             {
-                bool showCount = slot.amount > 1;
-                amountText.text = showCount ? slot.amount.ToString() : "";
+                string txt = slot.amount > 1 ? slot.amount.ToString() : (slot.item.icon == null ? slot.item.displayName : "");
+                amountText.text = txt;
                 amountText.color = Color.white;
-                amountText.enabled = showCount;
+                amountText.enabled = !string.IsNullOrEmpty(txt);
             }
         }
         else
@@ -120,12 +112,20 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         UI_ItemTooltip.Hide();
     }
 
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // Клик ПКМ выполняет быстрый перенос в связанный инвентарь (Склад <-> Рюкзак)
+        if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            _uiInventory?.QuickTransfer(_slotIndex);
+        }
+    }
+
     public void OnBeginDrag(PointerEventData eventData)
     {
         UI_ItemTooltip.Hide();
 
-        if (_uiInventory == null || _uiInventory.Inventory == null) return;
-        if (_slotIndex >= _uiInventory.Inventory.Slots.Count) return;
+        if (_uiInventory == null || _uiInventory.Inventory == null || _slotIndex >= _uiInventory.Inventory.Slots.Count) return;
 
         var slot = _uiInventory.Inventory.Slots[_slotIndex];
         if (slot == null || slot.IsEmpty || slot.item == null) return;
@@ -159,9 +159,9 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         var draggedSlot = eventData.pointerDrag.GetComponent<UI_InventorySlot>() ?? 
                           eventData.pointerDrag.GetComponentInParent<UI_InventorySlot>();
 
-        if (draggedSlot != null)
+        if (draggedSlot != null && draggedSlot.UIInventory != null)
         {
-            _uiInventory.SwapOrMerge(draggedSlot._slotIndex, this._slotIndex);
+            _uiInventory.TransferOrSwap(draggedSlot.UIInventory, draggedSlot.SlotIndex, this._slotIndex);
         }
     }
 }

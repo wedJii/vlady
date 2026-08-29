@@ -1068,6 +1068,8 @@ MonoBehaviour:
   slotPrefab: {fileID: 4147455047578642238, guid: 6f2ee3e4cf47bd342b0c710c2f616cca, type: 3}
   slotsParent: {fileID: 304022198}
   toggleKey: 9
+  startOpen: 0
+  linkedTransferUI: {fileID: 0}
 --- !u!114 &304022195
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1139,7 +1141,7 @@ RectTransform:
   m_GameObject: {fileID: 304022192}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.4, y: 2.4, z: 2.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1124184220}
@@ -1162,11 +1164,11 @@ RectTransform:
   - {fileID: 1021321710}
   - {fileID: 604051544}
   - {fileID: 909493126}
-  m_Father: {fileID: 605305306}
+  m_Father: {fileID: 972920438}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 401.6186, y: 224.87111}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 390, y: 320}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &307011647
@@ -1989,9 +1991,7 @@ Transform:
   m_LocalPosition: {x: -1.61861, y: 0.12888, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 304022198}
-  - {fileID: 1689548485}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &619394800
@@ -2867,7 +2867,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 304022198}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4319,13 +4320,14 @@ GameObject:
   m_Component:
   - component: {fileID: 1689548485}
   - component: {fileID: 1689548484}
+  - component: {fileID: 1689548486}
   m_Layer: 0
   m_Name: InventoryManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1689548484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4339,9 +4341,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Inventory
   capacity: 20
-  slots:
-  - item: {fileID: 11400000, guid: db21f85670b596c46a25b588818913f0, type: 2}
-    amount: 2
+  slots: []
+--- !u!114 &1689548486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1689548483}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7000000000000000000000000000003, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DungeonRaidInitializer
+  dungeonInventory: {fileID: 1689548484}
 --- !u!4 &1689548485
 Transform:
   m_ObjectHideFlags: 0
@@ -4355,7 +4368,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 605305306}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1740483965
 GameObject:

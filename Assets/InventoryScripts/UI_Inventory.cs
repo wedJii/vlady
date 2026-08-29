@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using DG.Tweening;
 
 [RequireComponent(typeof(CanvasGroup))]
@@ -12,50 +13,55 @@ public class UI_Inventory : MonoBehaviour
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private Transform slotsParent;
     [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
+    [SerializeField] private bool startOpen = false;
+    [SerializeField] private UI_Inventory linkedTransferUI;
 
     private readonly List<UI_InventorySlot> _uiSlots = new();
-    private Image _dragGhostImage;
+    private static Image _dragGhostImage;
     private Canvas _canvas;
     private CanvasGroup _canvasGroup;
-    private bool _isOpen = false;
+    private Vector3 _baseScale;
+    private bool _isOpen;
     private Tween _scaleTween;
     private Tween _fadeTween;
 
     public Inventory Inventory => inventory;
     public Canvas Canvas => _canvas;
     public bool IsOpen => _isOpen;
+    public UI_Inventory LinkedTransferUI => linkedTransferUI;
 
-    private CanvasGroup CanvasGroup
-    {
-        get
-        {
-            if (_canvasGroup == null)
-            {
-                _canvasGroup = GetComponent<CanvasGroup>();
-                if (_canvasGroup == null) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
-            }
-            return _canvasGroup;
-        }
-    }
+    private CanvasGroup CanvasGroup => _canvasGroup ??= (GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>());
 
     private void Awake()
     {
         Instance = this;
         _canvas = GetComponentInParent<Canvas>();
-        CreateDragGhost();
+        EnsureDragGhost();
 
-        // Всегда скрываем инвентарь при старте игры
-        _isOpen = false;
-        CanvasGroup.alpha = 0f;
-        CanvasGroup.blocksRaycasts = false;
-        CanvasGroup.interactable = false;
-        transform.localScale = Vector3.one * 0.7f;
+        _baseScale = transform.localScale;
+        if (_baseScale == Vector3.zero) _baseScale = Vector3.one;
+
+        _isOpen = startOpen;
+        if (_isOpen)
+        {
+            CanvasGroup.alpha = 1f;
+            CanvasGroup.blocksRaycasts = true;
+            CanvasGroup.interactable = true;
+            transform.localScale = _baseScale;
+        }
+        else
+        {
+            CanvasGroup.alpha = 0f;
+            CanvasGroup.blocksRaycasts = false;
+            CanvasGroup.interactable = false;
+            transform.localScale = _baseScale * 0.7f;
+        }
     }
 
     private void Start()
     {
         if (inventory == null)
-            inventory = FindFirstObjectByType<Inventory>();
+            inventory = GetComponent<Inventory>() ?? FindFirstObjectByType<Inventory>();
 
         if (inventory != null)
         {
@@ -81,9 +87,37 @@ public class UI_Inventory : MonoBehaviour
             inventory.OnInventoryChanged -= UpdateUI;
     }
 
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+        _scaleTween?.Kill();
+        _fadeTween?.Kill();
+    }
+
     private void Update()
     {
-        if (Input.GetKeyDown(toggleKey))
+        if (startOpen) return;
+
+        bool togglePressed = false;
+
+        // New Input System
+        if (Keyboard.current != null && (Keyboard.current.tabKey.wasPressedThisFrame || Keyboard.current.iKey.wasPressedThisFrame))
+        {
+            togglePressed = true;
+        }
+
+        // Legacy Input fallback
+        if (!togglePressed)
+        {
+            try
+            {
+                if (Input.GetKeyDown(toggleKey) || Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.I))
+                    togglePressed = true;
+            }
+            catch { }
+        }
+
+        if (togglePressed)
         {
             ToggleInventory();
         }
@@ -95,28 +129,34 @@ public class UI_Inventory : MonoBehaviour
         _scaleTween?.Kill();
         _fadeTween?.Kill();
 
+        if (_baseScale == Vector3.zero)
+            _baseScale = Vector3.one;
+
         if (_isOpen)
         {
             CanvasGroup.blocksRaycasts = true;
             CanvasGroup.interactable = true;
-            _scaleTween = transform.DOScale(1f, 0.2f).SetEase(Ease.OutBack).SetUpdate(true);
+            _scaleTween = transform.DOScale(_baseScale, 0.2f).SetEase(Ease.OutBack).SetUpdate(true);
             _fadeTween = CanvasGroup.DOFade(1f, 0.2f).SetUpdate(true);
+            UpdateUI();
         }
         else
         {
             CanvasGroup.blocksRaycasts = false;
             CanvasGroup.interactable = false;
             UI_ItemTooltip.Hide();
-            _scaleTween = transform.DOScale(0.7f, 0.15f).SetEase(Ease.InBack).SetUpdate(true);
+            _scaleTween = transform.DOScale(_baseScale * 0.7f, 0.15f).SetEase(Ease.InBack).SetUpdate(true);
             _fadeTween = CanvasGroup.DOFade(0f, 0.15f).SetUpdate(true);
         }
     }
 
-    private void CreateDragGhost()
+    private void EnsureDragGhost()
     {
-        var ghostObj = new GameObject("DragGhost", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
-        ghostObj.transform.SetParent(_canvas != null ? _canvas.transform : transform.root, false);
-        ghostObj.hideFlags = HideFlags.HideInHierarchy;
+        if (_dragGhostImage != null) return;
+
+        var ghostObj = new GameObject("GlobalDragGhost", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
+        var rootCanvas = _canvas != null ? _canvas.rootCanvas : FindFirstObjectByType<Canvas>();
+        ghostObj.transform.SetParent(rootCanvas != null ? rootCanvas.transform : transform.root, false);
 
         _dragGhostImage = ghostObj.GetComponent<Image>();
         _dragGhostImage.raycastTarget = false;
@@ -130,7 +170,9 @@ public class UI_Inventory : MonoBehaviour
 
     public void ShowDragGhost(Sprite sprite, Vector2 size)
     {
+        EnsureDragGhost();
         if (_dragGhostImage == null) return;
+
         _dragGhostImage.sprite = sprite;
         _dragGhostImage.color = Color.white;
         _dragGhostImage.rectTransform.sizeDelta = size;
@@ -142,9 +184,7 @@ public class UI_Inventory : MonoBehaviour
     public void UpdateDragGhostPosition(Vector2 position)
     {
         if (_dragGhostImage != null && _dragGhostImage.gameObject.activeSelf)
-        {
             _dragGhostImage.transform.position = position;
-        }
     }
 
     public void HideDragGhost()
@@ -193,12 +233,30 @@ public class UI_Inventory : MonoBehaviour
         }
     }
 
-    public void SwapOrMerge(int fromIndex, int toIndex)
+    public void TransferOrSwap(UI_Inventory fromUI, int fromIndex, int toIndex)
     {
-        if (inventory != null)
+        if (fromUI == null || fromUI.Inventory == null || this.Inventory == null) return;
+
+        if (fromUI == this)
         {
             inventory.MoveOrMerge(fromIndex, toIndex);
             UpdateUI();
+        }
+        else
+        {
+            fromUI.Inventory.TransferTo(fromIndex, this.Inventory, toIndex);
+            fromUI.UpdateUI();
+            this.UpdateUI();
+        }
+    }
+
+    public void QuickTransfer(int slotIndex)
+    {
+        if (linkedTransferUI != null && linkedTransferUI.Inventory != null && inventory != null)
+        {
+            inventory.QuickTransfer(slotIndex, linkedTransferUI.Inventory);
+            UpdateUI();
+            linkedTransferUI.UpdateUI();
         }
     }
 }

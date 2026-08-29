@@ -226,8 +226,8 @@ GameObject:
   m_Component:
   - component: {fileID: 216704766}
   - component: {fileID: 216704765}
-  - component: {fileID: 216704768}
-  - component: {fileID: 216704767}
+  - component: {fileID: 216704770}
+  - component: {fileID: 216704771}
   m_Layer: 0
   m_Name: InventoryManager
   m_TagString: Untagged
@@ -248,9 +248,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Inventory
   capacity: 20
-  slots:
-  - item: {fileID: 11400000, guid: db21f85670b596c46a25b588818913f0, type: 2}
-    amount: 2
+  slots: []
 --- !u!4 &216704766
 Transform:
   m_ObjectHideFlags: 0
@@ -260,13 +258,13 @@ Transform:
   m_GameObject: {fileID: 216704764}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1487.1057, y: 1050.099, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &216704767
+--- !u!114 &216704770
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -275,24 +273,39 @@ MonoBehaviour:
   m_GameObject: {fileID: 216704764}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88d4e2af0a184d2408f0bf14e63b52bf, type: 3}
+  m_Script: {fileID: 11500000, guid: 274d6755e2d292445a158df624009fad, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI_InventoryAnimator
-  _animationDuration: 0.25
-  _openEase: 27
-  _closeEase: 26
---- !u!225 &216704768
-CanvasGroup:
+  m_EditorClassIdentifier: Assembly-CSharp::Inventory
+  capacity: 8
+  slots:
+  - item: {fileID: 11400000, guid: db21f85670b596c46a25b588818913f0, type: 2}
+    amount: 1000
+  - item: {fileID: 11400000, guid: db21f85670b596c46a25b588818913f0, type: 2}
+    amount: 10
+  - item: {fileID: 11400000, guid: db21f85670b596c46a25b588818913f0, type: 2}
+    amount: 2
+--- !u!114 &216704771
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 216704764}
   m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7000000000000000000000000000002, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LobbyMenuManager
+  stashInventory: {fileID: 216704765}
+  raidInventory: {fileID: 216704770}
+  defaultStarterItems:
+  - item: {fileID: 11400000, guid: db21f85670b596c46a25b588818913f0, type: 2}
+    amount: 122
+  - item: {fileID: 11400000, guid: db21f85670b596c46a25b588818913f0, type: 2}
+    amount: 11
+  - item: {fileID: 11400000, guid: db21f85670b596c46a25b588818913f0, type: 2}
+    amount: 2
+  dungeonSceneName: Dungeon 1
 --- !u!1001 &282361863
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -395,6 +408,138 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 316725280381030236, guid: 6f2ee3e4cf47bd342b0c710c2f616cca, type: 3}
   m_PrefabInstance: {fileID: 1823277064}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &300000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 300000002}
+  - component: {fileID: 300000005}
+  - component: {fileID: 300000004}
+  - component: {fileID: 300000003}
+  - component: {fileID: 300000001}
+  - component: {fileID: 300000006}
+  m_Layer: 5
+  m_Name: RaidInventoryGrid
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &300000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f873aacba10a9e94e8c17d5f93e51f09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_Inventory
+  inventory: {fileID: 216704770}
+  slotPrefab: {fileID: 4147455047578642238, guid: 6f2ee3e4cf47bd342b0c710c2f616cca, type: 3}
+  slotsParent: {fileID: 300000002}
+  toggleKey: 9
+  startOpen: 1
+  linkedTransferUI: {fileID: 599913669}
+--- !u!224 &300000002
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300000000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 775305067}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 230, y: 60}
+  m_SizeDelta: {x: 310, y: 165}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &300000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GridLayoutGroup
+  m_Padding:
+    m_Left: 12
+    m_Right: 12
+    m_Top: 12
+    m_Bottom: 12
+  m_ChildAlignment: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 64, y: 64}
+  m_Spacing: {x: 10, y: 10}
+  m_Constraint: 1
+  m_ConstraintCount: 4
+--- !u!114 &300000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.14, g: 0.12, b: 0.18, a: 0.95}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &300000005
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300000000}
+  m_CullTransparentMesh: 1
+--- !u!225 &300000006
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300000000}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!224 &310787142 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 316725280381030236, guid: 6f2ee3e4cf47bd342b0c710c2f616cca, type: 3}
@@ -457,7 +602,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 204.04, y: -7.5001}
+  m_AnchoredPosition: {x: -180, y: -20}
   m_SizeDelta: {x: 391.92, y: 315}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &599913669
@@ -476,6 +621,8 @@ MonoBehaviour:
   slotPrefab: {fileID: 4147455047578642238, guid: 6f2ee3e4cf47bd342b0c710c2f616cca, type: 3}
   slotsParent: {fileID: 599913668}
   toggleKey: 9
+  startOpen: 1
+  linkedTransferUI: {fileID: 300000001}
 --- !u!114 &599913670
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -546,9 +693,9 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 599913667}
   m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 0
-  m_BlocksRaycasts: 0
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
 --- !u!1001 &623754261
 PrefabInstance:
@@ -754,6 +901,7 @@ RectTransform:
   m_Children:
   - {fileID: 1472288891}
   - {fileID: 599913668}
+  - {fileID: 300000002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1666,7 +1814,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Dungeon 333
+  m_text: "<b>\u0412 \u0420\u0415\u0419\u0414 (\u0414\u0430\u043D\u0436\u0435\u043D
+    1)</b>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1675,8 +1824,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281479730
-  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+    rgba: 4279900698
+  m_fontColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1693,7 +1842,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
+  m_fontSize: 20
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
@@ -1789,8 +1938,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -224, y: 114}
-  m_SizeDelta: {x: 245.9532, y: 137.928}
+  m_AnchoredPosition: {x: 230, y: -90}
+  m_SizeDelta: {x: 240, y: 65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1472288892
 MonoBehaviour:
@@ -1836,16 +1985,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1472288895}
-        m_TargetAssemblyTypeName: SceneLoader, Assembly-CSharp
-        m_MethodName: LoadSceneByName
-        m_Mode: 5
+      - m_Target: {fileID: 216704771}
+        m_TargetAssemblyTypeName: LobbyMenuManager, Assembly-CSharp
+        m_MethodName: StartRaid
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: Dungeon 1
+          m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1472288893

@@ -5,11 +5,22 @@ public class ItemPickup : MonoBehaviour
 {
     [SerializeField] private Item item;
     [SerializeField] private int amount = 1;
+    [SerializeField] private string customPickupID;
     [SerializeField] private bool bobbingAnimation = true;
 
     private Vector3 _startPos;
     private SpriteRenderer _spriteRenderer;
     private bool _isPickedUp = false;
+
+    public string UniqueID
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(customPickupID))
+                customPickupID = $"{gameObject.scene.name}_{gameObject.name}_{transform.position.x:F1}_{transform.position.y:F1}";
+            return customPickupID;
+        }
+    }
 
     private void Awake()
     {
@@ -18,6 +29,13 @@ public class ItemPickup : MonoBehaviour
 
         var col = GetComponent<Collider2D>();
         if (col != null) col.isTrigger = true;
+
+        // Если этот предмет уже был экстракнут — уничтожаем его сразу
+        if (RaidLoadoutManager.IsWorldItemCollected(UniqueID))
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         UpdateVisuals();
     }
@@ -63,15 +81,15 @@ public class ItemPickup : MonoBehaviour
 
         if (inventory == null)
         {
-            Debug.LogError("<color=red>[ItemPickup]</color> В сцене не найден компонент Inventory! Создай объект InventoryManager и добавь скрипт Inventory.", gameObject);
+            Debug.LogError("<color=red>[ItemPickup]</color> В сцене не найден компонент Inventory!", gameObject);
             return;
         }
 
         if (inventory.AddItem(item, amount))
         {
             _isPickedUp = true;
+            RaidLoadoutManager.MarkWorldItemCollected(UniqueID);
             UI_Inventory.Instance?.UpdateUI();
-            Debug.Log($"<color=green>[ItemPickup]</color> Успешно подобран: {item.displayName} x{amount}");
             Destroy(gameObject);
         }
         else

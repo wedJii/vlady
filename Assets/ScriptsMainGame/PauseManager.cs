@@ -59,6 +59,8 @@ public class PauseManager : MonoBehaviour
     public void GoToMainMenu()
     {
         Time.timeScale = 1f;
+        var inv = FindFirstObjectByType<Inventory>();
+        if (inv != null) RaidLoadoutManager.SaveDungeonLoot(inv);
         SceneManager.LoadScene("MainMenu");
     }
 
