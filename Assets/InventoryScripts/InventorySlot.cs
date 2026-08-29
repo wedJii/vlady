@@ -31,4 +31,10 @@ public class InventorySlot
         item = null;
         amount = 0;
     }
+    
+    public void ClearSlot()
+    {
+        item = null;
+        amount = 0;
+    }
 }
