@@ -9,11 +9,12 @@ public class PlayerControll : MonoBehaviour
     private Rigidbody2D rb;
     private Vector2 movement;
 
-    [Header("UI & Health")]
+    [Header("UI & Numbers")]
     [SerializeField] private Slider healthSlider;
     [SerializeField] private GameObject LosePanel;
     private float _currentHealth_Player = 100;
     private float _maxHealth_Player = 100;
+    public int CurrentCoins;
 
     [Header("Camera Settings")]
     [SerializeField] private Camera cam;
@@ -97,6 +98,8 @@ public class PlayerControll : MonoBehaviour
         {
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
+        
+        CurrentCoins = 0;
     }
 
     void Start()
@@ -226,7 +229,7 @@ public class PlayerControll : MonoBehaviour
         cam.transform.position = targetPos;
     }
 
-    public void Shoot()
+    public virtual void Shoot()
     {
         nextShootTime = Time.time + shootCooldown;
         Instantiate(bulletPrefab, transform.position, Quaternion.identity);

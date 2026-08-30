@@ -19,6 +19,8 @@ public class ExtractionZone : MonoBehaviour
     private bool _isExtracted;
     private SpriteRenderer _spriteRenderer;
     private TextMeshPro _statusText;
+    
+    private PlayerControll _player;
 
     private void Awake()
     {
@@ -122,6 +124,9 @@ public class ExtractionZone : MonoBehaviour
 
     public void Extract()
     {
+        _player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControll>();
+        CurrencyManager.SavedCoins += _player.CurrentCoins;
+        
         var inv = FindFirstObjectByType<Inventory>();
         if (inv != null)
         {

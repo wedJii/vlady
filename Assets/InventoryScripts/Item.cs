@@ -9,4 +9,7 @@ public class Item : ScriptableObject
     [TextArea(2, 4)] public string description;
     public bool isStackable = true;
     public int maxStack = 99;
+    
+    public virtual void OnApply(PlayerControll player) { }
+    public virtual void OnRemove(PlayerControll player) { }
 }
