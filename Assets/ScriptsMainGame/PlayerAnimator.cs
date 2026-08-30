@@ -18,7 +18,7 @@ public class PlayerAnimator : MonoBehaviour
     private Rigidbody2D _rb;
     private float _timer;
     private int _frame;
-    private int _direction = 0; // 0 = Down (0..11), 1 = Left (12..23), 2 = Right (24..35), 3 = Up (36..47)
+    private int _direction = 0;
 
     private void Awake()
     {

@@ -35,6 +35,8 @@ public class PlayerControll : MonoBehaviour
     [SerializeField] private GameObject bulletPrefab;
     private Bullet bulletScript;
     public Vector3 mouseWorldPos;
+    
+    private Animator animator;
 
     public float maxHealth_Player
     {
@@ -89,6 +91,8 @@ public class PlayerControll : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         _sr = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
+        
         if (rb != null)
         {
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
