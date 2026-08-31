@@ -1,11 +1,15 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using Random = UnityEngine.Random;
 
 public class PlayerControll : MonoBehaviour
 {
-    [Header("Movement")] public float speed = 5f;
+    [Header("Movement")]
+    public float basicSpeed = 5;
+    public float speed = 5f;
     private Rigidbody2D rb;
     private Vector2 movement;
 
@@ -35,7 +39,8 @@ public class PlayerControll : MonoBehaviour
     private float nextShootTime = 0f; 
     [SerializeField] private GameObject bulletPrefab;
     private Bullet bulletScript;
-    public Vector3 mouseWorldPos;
+    [NonSerialized] public Vector3 mouseWorldPos;
+    public event Action<Bullet> OnBulletSpawned;
     
     private Animator animator;
 
@@ -129,7 +134,7 @@ public class PlayerControll : MonoBehaviour
         movement = new Vector2(horizontal, vertical).normalized;
 
         // Проверяем нажатие ЛКМ, готовность кулдауна и отсутствие клика по UI
-        if (Input.GetMouseButtonDown(0) && Time.time >= nextShootTime)
+        if (Input.GetMouseButtonDown(0))
         {
             if (UnityEngine.EventSystems.EventSystem.current != null && 
                 UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
@@ -229,9 +234,16 @@ public class PlayerControll : MonoBehaviour
         cam.transform.position = targetPos;
     }
 
-    public virtual void Shoot()
+    public void Shoot()
     {
+        if (Time.time < nextShootTime) return;
         nextShootTime = Time.time + shootCooldown;
-        Instantiate(bulletPrefab, transform.position, Quaternion.identity);
+        
+        GameObject bulletObj = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
+        
+        if (bulletObj.TryGetComponent(out Bullet bullet))
+        {
+            OnBulletSpawned?.Invoke(bullet);
+        }
     }
-}
+}   
