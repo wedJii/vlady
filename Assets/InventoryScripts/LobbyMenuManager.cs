@@ -26,37 +26,66 @@ public class LobbyMenuManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        // Если в хранилище еще нет предметов
-        if (!RaidLoadoutManager.IsInitialized || !RaidLoadoutManager.HasAnyItems)
+        if (stashInventory != null)
+            stashInventory.plateCapacity = 0;
+
+        if (raidInventory != null)
+            raidInventory.plateCapacity = 0;
+
+        // 1. Считываем все предметы, настроенные в Инспекторе
+        var inspectorItems = new List<InventorySlot>();
+
+        if (defaultStarterItems != null && defaultStarterItems.Count > 0)
         {
-            var initialSlots = new List<InventorySlot>();
-
-            // 1. Проверяем defaultStarterItems
-            if (defaultStarterItems != null && defaultStarterItems.Count > 0)
+            foreach (var entry in defaultStarterItems)
             {
-                foreach (var entry in defaultStarterItems)
-                {
-                    if (entry.item != null && entry.amount > 0)
-                        initialSlots.Add(new InventorySlot(entry.item, entry.amount));
-                }
+                if (entry.item != null && entry.amount > 0)
+                    inspectorItems.Add(new InventorySlot(entry.item, entry.amount));
             }
-
-            // 2. Если defaultStarterItems пуст, проверяем не настроены ли слоты напрямую в компоненте Inventory
-            if (initialSlots.Count == 0 && stashInventory != null && stashInventory.Slots != null)
-            {
-                foreach (var s in stashInventory.Slots)
-                {
-                    if (s != null && !s.IsEmpty && s.item != null)
-                        initialSlots.Add(new InventorySlot(s.item, s.amount));
-                }
-            }
-
-            int stashCap = stashInventory != null ? stashInventory.Capacity : 20;
-            int raidCap = raidInventory != null ? raidInventory.Capacity : 8;
-            RaidLoadoutManager.Initialize(initialSlots, stashCap, raidCap, force: true);
         }
 
+        if (stashInventory != null && stashInventory.Slots != null)
+        {
+            foreach (var s in stashInventory.Slots)
+            {
+                if (s != null && !s.IsEmpty && s.item != null)
+                    inspectorItems.Add(new InventorySlot(s.item, s.amount));
+            }
+        }
+
+        // 2. Первичная инициализация при чистом старте
+        if (!RaidLoadoutManager.IsInitialized || !RaidLoadoutManager.HasAnyItems)
+        {
+            int stashCap = stashInventory != null ? stashInventory.Capacity : 20;
+            int raidCap = raidInventory != null ? raidInventory.Capacity : 8;
+            int plateCap = 3;
+            RaidLoadoutManager.Initialize(inspectorItems, stashCap, raidCap, plateCap, force: true);
+        }
+
+        // 3. Загружаем инвентарь
         RaidLoadoutManager.LoadToLobby(stashInventory, raidInventory);
+
+        // 4. Подтягиваем настроенные в Инспекторе предметы, если они отсутствуют у игрока (например, после смерти)
+        if (inspectorItems.Count > 0 && stashInventory != null)
+        {
+            bool addedAny = false;
+            foreach (var extra in inspectorItems)
+            {
+                bool hasInStash = stashInventory.ContainsItem(extra.item, 1);
+                bool hasInRaid = raidInventory != null && raidInventory.ContainsItem(extra.item, 1);
+
+                if (!hasInStash && !hasInRaid)
+                {
+                    stashInventory.AddItem(extra.item, extra.amount);
+                    addedAny = true;
+                }
+            }
+
+            if (addedAny)
+            {
+                RaidLoadoutManager.SaveLoadout(stashInventory, raidInventory);
+            }
+        }
     }
 
     public void StartRaid()

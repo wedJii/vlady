@@ -124,10 +124,14 @@ public class ExtractionZone : MonoBehaviour
 
     public void Extract()
     {
-        _player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControll>();
-        CurrencyManager.SavedCoins += _player.CurrentCoins;
+        _player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerControll>() ?? FindFirstObjectByType<PlayerControll>();
+        if (_player != null)
+            CurrencyManager.SavedCoins += _player.CurrentCoins;
         
-        var inv = FindFirstObjectByType<Inventory>();
+        var inv = (UI_Inventory.Instance != null && UI_Inventory.Instance.Inventory != null) 
+                  ? UI_Inventory.Instance.Inventory 
+                  : FindFirstObjectByType<Inventory>();
+
         if (inv != null)
         {
             RaidLoadoutManager.OnSuccessfulExtraction(inv);

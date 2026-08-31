@@ -248,7 +248,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Inventory
   capacity: 20
-  slots: []
+  slots:
+  - item: {fileID: 11400000, guid: f235b2ac790c737409c6c2e5abf7f23e, type: 2}
+    amount: 1
+  plateCapacity: 3
+  plateSlots: []
 --- !u!4 &216704766
 Transform:
   m_ObjectHideFlags: 0
@@ -284,6 +288,10 @@ MonoBehaviour:
     amount: 10
   - item: {fileID: 11400000, guid: db21f85670b596c46a25b588818913f0, type: 2}
     amount: 2
+  plateCapacity: 0
+  plateSlots:
+  - item: {fileID: 11400000, guid: a7d6865ed7d80d045b7cef6ef234cd3e, type: 2}
+    amount: 1
 --- !u!114 &216704771
 MonoBehaviour:
   m_ObjectHideFlags: 0

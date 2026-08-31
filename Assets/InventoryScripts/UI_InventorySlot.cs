@@ -7,16 +7,25 @@ using DG.Tweening;
 [RequireComponent(typeof(CanvasGroup))]
 public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
+    [Header("UI Elements")]
     [SerializeField] private Image icon;
     [SerializeField] private TextMeshProUGUI amountText;
+    [SerializeField] private Image backgroundImage;
+
+    [Header("Slot Mode")]
+    [SerializeField] private bool isPlateSlot = false;
 
     private int _slotIndex;
     private UI_Inventory _uiInventory;
     private CanvasGroup _canvasGroup;
     private Tween _hoverTween;
+    private Color _originalBgColor = new(0.16f, 0.18f, 0.24f, 0.95f);
+    private Color _plateBgColor = new(0.12f, 0.28f, 0.38f, 0.98f);
 
     public UI_Inventory UIInventory => _uiInventory;
     public int SlotIndex => _slotIndex;
+    public bool IsPlateSlot => isPlateSlot;
+    public TextMeshProUGUI AmountText => amountText;
 
     private CanvasGroup CanvasGroup => _canvasGroup ??= (GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>());
 
@@ -24,6 +33,9 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
     private void EnsureComponents()
     {
+        if (backgroundImage == null)
+            backgroundImage = GetComponent<Image>();
+
         if (icon == null)
         {
             var iconTr = transform.Find("Icon");
@@ -35,19 +47,38 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
             amountText = transform.Find("AmountText")?.GetComponent<TextMeshProUGUI>();
 
         if (amountText != null)
+        {
             amountText.color = Color.white;
+            amountText.faceColor = new Color32(255, 255, 255, 255);
+            amountText.enableAutoSizing = true;
+            amountText.fontSizeMin = 8;
+            amountText.fontSizeMax = 12;
+            amountText.alignment = TextAlignmentOptions.BottomRight;
+            amountText.raycastTarget = false;
+        }
     }
 
-    public void Init(UI_Inventory uiInv, int index)
+    public void Init(UI_Inventory uiInv, int index, bool isPlate = false)
     {
         EnsureComponents();
         _uiInventory = uiInv;
         _slotIndex = index;
+        isPlateSlot = isPlate;
+
+        if (backgroundImage != null)
+        {
+            backgroundImage.color = isPlateSlot ? _plateBgColor : _originalBgColor;
+        }
     }
 
     public void Render(InventorySlot slot)
     {
         EnsureComponents();
+
+        if (backgroundImage != null)
+        {
+            backgroundImage.color = isPlateSlot ? _plateBgColor : _originalBgColor;
+        }
 
         if (slot != null && !slot.IsEmpty && slot.item != null)
         {
@@ -62,16 +93,17 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
                 else
                 {
                     icon.sprite = null;
-                    icon.color = new Color(0.2f, 0.55f, 0.85f, 0.9f);
+                    icon.color = isPlateSlot ? new Color(0.25f, 0.75f, 0.85f, 0.85f) : new Color(0.25f, 0.55f, 0.85f, 0.85f);
                     icon.enabled = true;
                 }
             }
 
             if (amountText != null)
             {
-                string txt = slot.amount > 1 ? slot.amount.ToString() : (slot.item.icon == null ? slot.item.displayName : "");
+                string txt = slot.amount > 1 ? slot.amount.ToString() : "";
                 amountText.text = txt;
                 amountText.color = Color.white;
+                amountText.faceColor = new Color32(255, 255, 255, 255);
                 amountText.enabled = !string.IsNullOrEmpty(txt);
             }
         }
@@ -95,12 +127,16 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         _hoverTween?.Kill();
         _hoverTween = transform.DOScale(1.08f, 0.15f).SetUpdate(true);
 
-        if (_uiInventory != null && _uiInventory.Inventory != null && _slotIndex < _uiInventory.Inventory.Slots.Count)
+        if (_uiInventory != null && _uiInventory.Inventory != null)
         {
-            var slot = _uiInventory.Inventory.Slots[_slotIndex];
-            if (slot != null && !slot.IsEmpty && slot.item != null)
+            var list = _uiInventory.Inventory.GetSlotList(isPlateSlot);
+            if (_slotIndex >= 0 && _slotIndex < list.Count)
             {
-                UI_ItemTooltip.Show(slot.item);
+                var slot = list[_slotIndex];
+                if (slot != null && !slot.IsEmpty && slot.item != null)
+                {
+                    UI_ItemTooltip.Show(slot.item);
+                }
             }
         }
     }
@@ -114,10 +150,9 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        // Клик ПКМ выполняет быстрый перенос в связанный инвентарь (Склад <-> Рюкзак)
         if (eventData.button == PointerEventData.InputButton.Right)
         {
-            _uiInventory?.QuickTransfer(_slotIndex);
+            _uiInventory?.QuickTransfer(_slotIndex, isPlateSlot);
         }
     }
 
@@ -125,9 +160,11 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
     {
         UI_ItemTooltip.Hide();
 
-        if (_uiInventory == null || _uiInventory.Inventory == null || _slotIndex >= _uiInventory.Inventory.Slots.Count) return;
+        if (_uiInventory == null || _uiInventory.Inventory == null) return;
+        var list = _uiInventory.Inventory.GetSlotList(isPlateSlot);
+        if (_slotIndex < 0 || _slotIndex >= list.Count) return;
 
-        var slot = _uiInventory.Inventory.Slots[_slotIndex];
+        var slot = list[_slotIndex];
         if (slot == null || slot.IsEmpty || slot.item == null) return;
 
         if (icon != null)
@@ -159,9 +196,33 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         var draggedSlot = eventData.pointerDrag.GetComponent<UI_InventorySlot>() ?? 
                           eventData.pointerDrag.GetComponentInParent<UI_InventorySlot>();
 
-        if (draggedSlot != null && draggedSlot.UIInventory != null)
+        if (draggedSlot != null && draggedSlot.UIInventory != null && draggedSlot.UIInventory.Inventory != null)
         {
-            _uiInventory.TransferOrSwap(draggedSlot.UIInventory, draggedSlot.SlotIndex, this._slotIndex);
+            var sourceList = draggedSlot.UIInventory.Inventory.GetSlotList(draggedSlot.IsPlateSlot);
+            if (draggedSlot.SlotIndex < 0 || draggedSlot.SlotIndex >= sourceList.Count) return;
+
+            var draggedItem = sourceList[draggedSlot.SlotIndex]?.item;
+
+            // В слот пластины можно класть ТОЛЬКО пластины (UbgradePlate)
+            if (this.IsPlateSlot && draggedItem != null && !(draggedItem is UbgradePlate))
+            {
+                RejectShake();
+                return;
+            }
+
+            _uiInventory.TransferOrSwap(
+                draggedSlot.UIInventory, 
+                draggedSlot.SlotIndex, 
+                draggedSlot.IsPlateSlot, 
+                this._slotIndex, 
+                this.isPlateSlot
+            );
         }
+    }
+
+    public void RejectShake()
+    {
+        transform.DOKill();
+        transform.DOShakePosition(0.25f, new Vector3(8f, 0f, 0f), 15).SetUpdate(true);
     }
 }

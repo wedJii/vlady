@@ -9,9 +9,16 @@ public class DungeonRaidInitializer : MonoBehaviour
         if (dungeonInventory == null)
             dungeonInventory = GetComponent<Inventory>() ?? FindFirstObjectByType<Inventory>();
 
+        var player = FindFirstObjectByType<PlayerControll>();
+
         if (dungeonInventory != null)
         {
-            RaidLoadoutManager.ApplyToDungeon(dungeonInventory);
+            dungeonInventory.capacity = 15;
+            dungeonInventory.plateCapacity = 3;
+
+            // Загружаем только реальные вещи и пластины, которые игрок взял с собой в рейд
+            RaidLoadoutManager.ApplyToDungeon(dungeonInventory, player);
+
             UI_Inventory.Instance?.UpdateUI();
         }
     }
