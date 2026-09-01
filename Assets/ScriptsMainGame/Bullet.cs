@@ -1,3 +1,4 @@
+using System; // ОБЯЗАТЕЛЬНО для Action
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
@@ -12,6 +13,8 @@ public class Bullet : MonoBehaviour
     private float animTimer;
     private int frameIndex;
     public bool isDuplicate = false;
+    
+    public event Action<Enemy> OnHitEnemy;
 
     public void Awake()
     {
@@ -64,6 +67,7 @@ public class Bullet : MonoBehaviour
                 if (enemy != null && playerScript != null)
                 {
                     enemy.currentHealth_Enemy -= playerScript.bulletDamage;
+                    OnHitEnemy?.Invoke(enemy);
                 }
             }
             Destroy(gameObject);
