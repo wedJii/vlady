@@ -120,8 +120,6 @@ public class PlayerControll : MonoBehaviour
     void Update()
     {
         if (isDead) return;
-
-        // Блокируем управление, если открыт инвентарь
         if (UI_Inventory.Instance != null && UI_Inventory.Instance.IsOpen)
         {
             movement = Vector2.zero;

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c2089b47d377b646a58c4a06e69e5df, type: 3}
+  m_Name: Health Plate
+  m_EditorClassIdentifier: Assembly-CSharp::HealthPlate
+  id: health
+  displayName: Health Plate
+  icon: {fileID: 0}
+  description: 
+  isStackable: 0
+  maxStack: 1
+  bonusHealth: 50

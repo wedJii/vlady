@@ -11,6 +11,7 @@ public class Bullet : MonoBehaviour
     private SpriteRenderer sr;
     private float animTimer;
     private int frameIndex;
+    public bool isDuplicate = false;
 
     public void Awake()
     {
@@ -34,9 +35,6 @@ public class Bullet : MonoBehaviour
         
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0, 0, angle);
-
-        // Автоматически уничтожать пулю через 4 секунды
-        Destroy(gameObject, 4f);
     }
 
     private void Update()

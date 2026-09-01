@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec0236167ed18ff42b012ca94552cef7, type: 3}
-  m_Name: Speed Plate 2
+  m_Name: Speed Plate
   m_EditorClassIdentifier: Assembly-CSharp::SpeedPlateScript
-  id: speed2
+  id: speed
   displayName: Speed Plate
   icon: {fileID: 0}
   description: speed plate
