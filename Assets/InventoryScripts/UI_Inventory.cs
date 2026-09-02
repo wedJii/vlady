@@ -33,6 +33,11 @@ public class UI_Inventory : MonoBehaviour
     private Tween _scaleTween;
     private Tween _fadeTween;
 
+    private RectTransform _rectTransform;
+    private RectTransform RectTr => _rectTransform ??= GetComponent<RectTransform>();
+    private Vector2 _baseAnchoredPosition;
+    private Tween _posTween;
+
     public Inventory Inventory => inventory;
     public Canvas Canvas => _canvas;
     public bool IsOpen => _isOpen;
@@ -42,12 +47,13 @@ public class UI_Inventory : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        if (Instance == null && !startOpen) Instance = this;
         _canvas = GetComponentInParent<Canvas>();
         EnsureDragGhost();
 
         _baseScale = transform.localScale;
         if (_baseScale == Vector3.zero) _baseScale = Vector3.one;
+        _baseAnchoredPosition = RectTr.anchoredPosition;
 
         _isOpen = startOpen;
         if (_isOpen)
@@ -100,11 +106,16 @@ public class UI_Inventory : MonoBehaviour
         if (Instance == this) Instance = null;
         _scaleTween?.Kill();
         _fadeTween?.Kill();
+        _posTween?.Kill();
     }
 
     private void Update()
     {
         if (startOpen) return;
+
+        // Если открыт сундук — управление закрытием сундука берет на себя UI_Chest
+        if (UI_Chest.Instance != null && UI_Chest.Instance.IsOpen)
+            return;
 
         bool togglePressed = false;
 
@@ -131,32 +142,72 @@ public class UI_Inventory : MonoBehaviour
         }
     }
 
-    public void ToggleInventory()
+    public void Open()
     {
-        _isOpen = !_isOpen;
+        if (_isOpen) return;
+        _isOpen = true;
         _scaleTween?.Kill();
         _fadeTween?.Kill();
 
         if (_baseScale == Vector3.zero)
             _baseScale = Vector3.one;
 
-        if (_isOpen)
-        {
-            CanvasGroup.blocksRaycasts = true;
-            CanvasGroup.interactable = true;
-            _scaleTween = transform.DOScale(_baseScale, 0.2f).SetEase(Ease.OutBack).SetUpdate(true);
-            _fadeTween = CanvasGroup.DOFade(1f, 0.2f).SetUpdate(true);
-            UpdateUI();
-        }
-        else
-        {
-            CanvasGroup.blocksRaycasts = false;
-            CanvasGroup.interactable = false;
-            UI_ItemTooltip.Hide();
-            _scaleTween = transform.DOScale(_baseScale * 0.7f, 0.15f).SetEase(Ease.InBack).SetUpdate(true);
-            _fadeTween = CanvasGroup.DOFade(0f, 0.15f).SetUpdate(true);
-        }
+        CanvasGroup.blocksRaycasts = true;
+        CanvasGroup.interactable = true;
+        _scaleTween = transform.DOScale(_baseScale, 0.2f).SetEase(Ease.OutBack).SetUpdate(true);
+        _fadeTween = CanvasGroup.DOFade(1f, 0.2f).SetUpdate(true);
+        UpdateUI();
     }
+
+    public void Close()
+    {
+        if (!_isOpen) return;
+        _isOpen = false;
+        _scaleTween?.Kill();
+        _fadeTween?.Kill();
+
+        CanvasGroup.blocksRaycasts = false;
+        CanvasGroup.interactable = false;
+        UI_ItemTooltip.Hide();
+        _scaleTween = transform.DOScale(_baseScale * 0.7f, 0.15f).SetEase(Ease.InBack).SetUpdate(true);
+        _fadeTween = CanvasGroup.DOFade(0f, 0.15f).SetUpdate(true);
+    }
+
+    public void ToggleInventory()
+    {
+        if (_isOpen) Close();
+        else Open();
+    }
+
+    public void ShiftPosition(Vector2 targetPos, float duration = 0.2f)
+    {
+        _posTween?.Kill();
+        _posTween = RectTr.DOAnchorPos(targetPos, duration).SetEase(Ease.OutCubic).SetUpdate(true);
+    }
+
+    public void ResetPosition(float duration = 0.2f)
+    {
+        _posTween?.Kill();
+        _posTween = RectTr.DOAnchorPos(_baseAnchoredPosition, duration).SetEase(Ease.OutCubic).SetUpdate(true);
+    }
+
+    public void SetInventory(Inventory newInv)
+    {
+        if (inventory != null)
+            inventory.OnInventoryChanged -= UpdateUI;
+
+        inventory = newInv;
+
+        if (inventory != null)
+        {
+            inventory.OnInventoryChanged -= UpdateUI;
+            inventory.OnInventoryChanged += UpdateUI;
+        }
+
+        InitUI();
+    }
+
+    public void SetLinkedTransferUI(UI_Inventory linkedUI) => linkedTransferUI = linkedUI;
 
     private void EnsureDragGhost()
     {
@@ -226,15 +277,12 @@ public class UI_Inventory : MonoBehaviour
             allSlots.Add(s);
         }
 
-        if (allSlots.Count == 0 && slotPrefab != null)
+        int total = inventory.Capacity + inventory.PlateCapacity;
+        while (allSlots.Count < total && slotPrefab != null)
         {
-            int total = inventory.Capacity + inventory.PlateCapacity;
-            for (int i = 0; i < total; i++)
-            {
-                var slotObj = Instantiate(slotPrefab, container);
-                var uiSlot = slotObj.GetComponent<UI_InventorySlot>() ?? slotObj.AddComponent<UI_InventorySlot>();
-                allSlots.Add(uiSlot);
-            }
+            var slotObj = Instantiate(slotPrefab, container);
+            var uiSlot = slotObj.GetComponent<UI_InventorySlot>() ?? slotObj.AddComponent<UI_InventorySlot>();
+            allSlots.Add(uiSlot);
         }
 
         // Если инвентарь со слотами под пластины (в Dungeon 1)
@@ -302,12 +350,19 @@ public class UI_Inventory : MonoBehaviour
                 else DestroyImmediate(headerObj.gameObject);
             }
 
-            // Для обычных инвентарей без пластин (в viborDungeon)
+            // Для обычных инвентарей без пластин (в сундуках и viborDungeon)
             for (int i = 0; i < allSlots.Count; i++)
             {
-                allSlots[i].gameObject.SetActive(true);
-                allSlots[i].Init(this, i, false);
-                _uiSlots.Add(allSlots[i]);
+                if (i < inventory.Capacity)
+                {
+                    allSlots[i].gameObject.SetActive(true);
+                    allSlots[i].Init(this, i, false);
+                    _uiSlots.Add(allSlots[i]);
+                }
+                else
+                {
+                    allSlots[i].gameObject.SetActive(false);
+                }
             }
         }
 
