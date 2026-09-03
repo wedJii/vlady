@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2481958451782515770}
   - component: {fileID: 6282086944301027197}
   - component: {fileID: 1508883856436836567}
+  - component: {fileID: 3108883856436836567}
   m_Layer: 0
   m_Name: Bullet
   m_TagString: Untagged
@@ -82,9 +83,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 5
+  m_SortingOrder: 2500
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 2000, guid: c7b00000000000000000000000000001, type: 3}
+  m_Sprite: {fileID: 2000, guid: c8000000000000000000000000000001, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -97,13 +98,13 @@ SpriteRenderer:
   m_BlendShapeWeights: []
 --- !u!58 &2481958451782515770
 CircleCollider2D:
+  serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1353340211522742785}
   m_Enabled: 1
-  serializedVersion: 3
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -170,13 +171,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5974da69cec79d84681b4793848797d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
-  animFPS: 16
-  animFrames:
-  - {fileID: 2000, guid: c7b00000000000000000000000000001, type: 3}
-  - {fileID: 2001, guid: c7b00000000000000000000000000001, type: 3}
-  - {fileID: 2002, guid: c7b00000000000000000000000000001, type: 3}
-  - {fileID: 2003, guid: c7b00000000000000000000000000001, type: 3}
-  - {fileID: 2004, guid: c7b00000000000000000000000000001, type: 3}
-  - {fileID: 2005, guid: c7b00000000000000000000000000001, type: 3}
-  - {fileID: 2006, guid: c7b00000000000000000000000000001, type: 3}
-  - {fileID: 2007, guid: c7b00000000000000000000000000001, type: 3}
+  isDuplicate: 0
+--- !u!95 &3108883856436836567
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1353340211522742785}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: b2000000000000000000000000000002, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

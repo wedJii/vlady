@@ -3,24 +3,13 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    [Header("Animation")]
-    [SerializeField] private Sprite[] animFrames;
-    [SerializeField] private float animFPS = 14f;
-
     private PlayerControll playerScript;
     private Rigidbody2D rb;
-    private SpriteRenderer sr;
-    private float animTimer;
-    private int frameIndex;
     public bool isDuplicate = false;
     
     public event Action<Enemy> OnHitEnemy;
 
-    public void Awake()
-    {
-        rb = GetComponent<Rigidbody2D>();
-        sr = GetComponent<SpriteRenderer>();
-    }
+    public void Awake() => rb = GetComponent<Rigidbody2D>();
 
     public void Start()
     {
@@ -38,23 +27,6 @@ public class Bullet : MonoBehaviour
         
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0, 0, angle);
-    }
-
-    private void Update()
-    {
-        if (animFrames != null && animFrames.Length > 0 && sr != null)
-        {
-            animTimer += Time.deltaTime;
-            if (animTimer >= 1f / animFPS)
-            {
-                animTimer = 0f;
-                frameIndex = (frameIndex + 1) % animFrames.Length;
-                if (frameIndex < animFrames.Length && animFrames[frameIndex] != null)
-                {
-                    sr.sprite = animFrames[frameIndex];
-                }
-            }
-        }
     }
 
     void OnTriggerEnter2D(Collider2D other)

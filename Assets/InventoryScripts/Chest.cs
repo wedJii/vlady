@@ -56,6 +56,8 @@ public class Chest : MonoBehaviour
     private void Start()
     {
         InitStarterItems();
+        if (_sr != null)
+            _sr.sortingOrder = 1000 + Mathf.RoundToInt(-transform.position.y * 100);
     }
 
     private void InitStarterItems()
@@ -85,13 +87,13 @@ public class Chest : MonoBehaviour
 
         var promptGo = new GameObject("InteractionPrompt", typeof(TextMeshPro));
         promptGo.transform.SetParent(transform, false);
-        promptGo.transform.localPosition = new Vector3(0f, 0.75f, 0f);
+        promptGo.transform.localPosition = new Vector3(0f, 0.85f, 0f);
 
         var tmp = promptGo.GetComponent<TextMeshPro>();
         tmp.text = "<color=#FFEAA7>[<b>E</b>]</color> Открыть";
         tmp.fontSize = 3.5f;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.sortingOrder = 100;
+        tmp.sortingOrder = 3000;
 
         interactionPrompt = promptGo;
         interactionPrompt.SetActive(false);

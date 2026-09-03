@@ -43,6 +43,12 @@ public class PlayerControll : MonoBehaviour
     public event Action<Bullet> OnBulletSpawned;
     
     private Animator animator;
+    private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
+    private static readonly int DirectionHash = Animator.StringToHash("Direction");
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int MoveXHash = Animator.StringToHash("MoveX");
+    private static readonly int MoveYHash = Animator.StringToHash("MoveY");
+    private int _direction = 0;
 
     public float maxHealth_Player
     {
@@ -131,6 +137,26 @@ public class PlayerControll : MonoBehaviour
 
         movement = new Vector2(horizontal, vertical).normalized;
 
+        bool isMoving = movement.sqrMagnitude > 0.001f;
+        if (isMoving)
+        {
+            if (Mathf.Abs(movement.x) > Mathf.Abs(movement.y))
+                _direction = movement.x < 0 ? 1 : 2; // 1 = Влево, 2 = Вправо
+            else if (Mathf.Abs(movement.y) > 0.01f)
+                _direction = movement.y > 0 ? 3 : 0; // 3 = Вверх, 0 = Вниз
+            else if (Mathf.Abs(movement.x) > 0.01f)
+                _direction = movement.x < 0 ? 1 : 2;
+        }
+
+        if (animator != null)
+        {
+            animator.SetBool(IsMovingHash, isMoving);
+            animator.SetInteger(DirectionHash, _direction);
+            animator.SetFloat(SpeedHash, isMoving ? speed : 0f);
+            animator.SetFloat(MoveXHash, movement.x);
+            animator.SetFloat(MoveYHash, movement.y);
+        }
+
         // Проверяем нажатие ЛКМ, готовность кулдауна и отсутствие клика по UI
         if (Input.GetMouseButtonDown(0))
         {
@@ -140,6 +166,12 @@ public class PlayerControll : MonoBehaviour
 
             Shoot();
         }
+    }
+
+    private void LateUpdate()
+    {
+        if (_sr != null)
+            _sr.sortingOrder = 1000 + Mathf.RoundToInt(-transform.position.y * 100);
     }
 
     void FixedUpdate()

@@ -88,6 +88,12 @@ public class LobbyMenuManager : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.escapeKey.wasPressedThisFrame)
+            BackToMainMenu();
+    }
+
     public void StartRaid()
     {
         RaidLoadoutManager.StartRaidSession(stashInventory, raidInventory);

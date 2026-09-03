@@ -43,6 +43,18 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float _damage = 10f;
     [SerializeField] private Slider healthSlider_Enemy;
     private bool _isPlayerTouched;
+    private SpriteRenderer _sr;
+
+    private void Awake()
+    {
+        _sr = GetComponent<SpriteRenderer>();
+    }
+
+    private void LateUpdate()
+    {
+        if (_sr != null)
+            _sr.sortingOrder = 1000 + Mathf.RoundToInt(-transform.position.y * 100);
+    }
 
     private async void OnTriggerEnter2D(Collider2D other)
     {

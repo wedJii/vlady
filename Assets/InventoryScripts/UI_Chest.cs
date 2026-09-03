@@ -160,8 +160,9 @@ public class UI_Chest : MonoBehaviour
         btnTxtRt.anchorMax = Vector2.one;
         btnTxtRt.sizeDelta = Vector2.zero;
         var btnTmp = btnTxtGo.GetComponent<TextMeshProUGUI>();
-        btnTmp.text = "✕";
+        btnTmp.text = "<b>X</b>";
         btnTmp.fontSize = 14;
+        btnTmp.fontStyle = FontStyles.Bold;
         btnTmp.alignment = TextAlignmentOptions.Center;
         btnTmp.color = Color.white;
         btnTmp.raycastTarget = false;

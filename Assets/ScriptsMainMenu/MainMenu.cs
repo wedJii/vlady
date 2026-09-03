@@ -69,4 +69,10 @@ public class MainMenu : MonoBehaviour
     {
         Application.Quit();
     }
+
+    public void OnEasterEggClick()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("poshalko");
+    }
 }

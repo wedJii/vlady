@@ -62,6 +62,9 @@ public class UI_Inventory : MonoBehaviour
             CanvasGroup.blocksRaycasts = true;
             CanvasGroup.interactable = true;
             transform.localScale = _baseScale;
+            if (inventory == null)
+                inventory = GetComponent<Inventory>() ?? FindFirstObjectByType<Inventory>();
+            InitUI();
         }
         else
         {
@@ -71,6 +74,27 @@ public class UI_Inventory : MonoBehaviour
             transform.localScale = _baseScale * 0.7f;
         }
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (!Application.isPlaying)
+        {
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (this != null && gameObject != null && !Application.isPlaying)
+                {
+                    if (startOpen && TryGetComponent<CanvasGroup>(out var cg))
+                    {
+                        cg.alpha = 1f;
+                        cg.blocksRaycasts = true;
+                        cg.interactable = true;
+                    }
+                }
+            };
+        }
+    }
+#endif
 
     private void Start()
     {
