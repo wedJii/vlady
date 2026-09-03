@@ -5,7 +5,7 @@ using UnityEngine;
 public class BurnPlate : UbgradePlate
 {
     [SerializeField] private float burnDamage = 5f;
-    [SerializeField] private float waitBetweenBurns = 1f; // Время в секундах
+    [SerializeField] private float waitBetweenBurns = 1f; 
     [SerializeField] private int burnTimes = 5;
 
     // Ссылка на игрока для запуска корутин
