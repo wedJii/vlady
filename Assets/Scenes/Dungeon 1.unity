@@ -6359,36 +6359,6 @@ PrefabInstance:
       addedObject: {fileID: 1424389230}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 24c2669818fc08141a9589c3a4049d00, type: 3}
-
---- !u!1001 &8500001
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 2328822316811284375, guid: 8f5294e435e39974d8d4cb5c4278b036, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 5.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2328822316811284375, guid: 8f5294e435e39974d8d4cb5c4278b036, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2328822316811284375, guid: 8f5294e435e39974d8d4cb5c4278b036, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8121296171012342088, guid: 8f5294e435e39974d8d4cb5c4278b036, type: 3}
-      propertyPath: m_Name
-      value: SkeletonEnemy
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 8f5294e435e39974d8d4cb5c4278b036, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -6405,4 +6375,3 @@ SceneRoots:
   - {fileID: 900100101}
   - {fileID: 1689548485}
   - {fileID: 720000002}
-  - {fileID: 8500001}
