@@ -87,10 +87,10 @@ public class InventorySaveSystem : MonoBehaviour
         return null;
     }
 
-    // Горячие клавиши для проверки в редакторе
+    // Горячие клавиши для проверки в редакторе (F5 - сохранить, F9 - загрузить, чтобы не конфликтовать с клавишей S для ходьбы)
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.S)) SaveInventory(); // Нажми S для сохранения
-        if (Input.GetKeyDown(KeyCode.L)) LoadInventory(); // Нажми L для загрузки
+        if (Input.GetKeyDown(KeyCode.F5)) SaveInventory();
+        if (Input.GetKeyDown(KeyCode.F9)) LoadInventory();
     }
 }
