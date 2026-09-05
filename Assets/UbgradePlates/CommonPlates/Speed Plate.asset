@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpeedPlateScript
   id: speed
   displayName: Speed Plate
-  icon: {fileID: 0}
+  icon: {fileID: -6247641717392323832, guid: d0cd1f2c61ea6d042a258858c91a2e51, type: 3}
   description: speed plate
   isStackable: 0
   maxStack: 1
