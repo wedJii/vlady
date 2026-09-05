@@ -1,10 +1,12 @@
-using System;
-using System.Threading.Tasks;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using Pathfinding;
 
 public class Enemy : MonoBehaviour
 {
+    [Header("Health")]
+    [SerializeField] private Slider healthSlider_Enemy;
     private float _currentHealth_Enemy = 100;
     public float currentHealth_Enemy
     {
@@ -18,6 +20,11 @@ public class Enemy : MonoBehaviour
                 if (healthSlider_Enemy != null)
                 {
                     healthSlider_Enemy.value = _currentHealth_Enemy;
+                }
+
+                if (_currentHealth_Enemy <= 0)
+                {
+                    Die();
                 }
             }
         }
@@ -40,14 +47,158 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    [Header("Melee Contact Damage")]
     [SerializeField] private float _damage = 10f;
-    [SerializeField] private Slider healthSlider_Enemy;
-    private bool _isPlayerTouched;
+
+    [Header("Movement")]
+    [SerializeField] private float _moveSpeed = 2.2f;
+    [SerializeField] private float _stoppingDistance = 4f;
+
+    [Header("Ranged Attack (Bow)")]
+    [SerializeField] private bool _isRanged = true;
+    [SerializeField] private GameObject _arrowPrefab;
+    [SerializeField] private float _attackRange = 7f;
+    [SerializeField] private float _attackCooldown = 2f;
+    [SerializeField] private float _arrowSpeed = 8f;
+    [SerializeField] private float _arrowDamage = 10f;
+
+    private Transform _target;
+    private Rigidbody2D _rb;
     private SpriteRenderer _sr;
+    private Animator _animator;
+    private AIPath _aiPath;
+    private AIDestinationSetter _destinationSetter;
+    private Coroutine _damageRoutine;
+    private float _nextShootTime;
 
     private void Awake()
     {
+        _rb = GetComponent<Rigidbody2D>();
         _sr = GetComponent<SpriteRenderer>();
+        _animator = GetComponent<Animator>();
+        _aiPath = GetComponent<AIPath>();
+        _destinationSetter = GetComponent<AIDestinationSetter>();
+    }
+
+    private void Start()
+    {
+        FindPlayerTarget();
+
+        if (healthSlider_Enemy != null)
+        {
+            healthSlider_Enemy.maxValue = _maxHealth_Enemy;
+            healthSlider_Enemy.value = _currentHealth_Enemy;
+        }
+
+        if (_aiPath != null)
+        {
+            _aiPath.maxSpeed = _moveSpeed;
+            _aiPath.endReachedDistance = _isRanged ? _stoppingDistance : 0.5f;
+        }
+    }
+
+    private void FindPlayerTarget()
+    {
+        var player = FindFirstObjectByType<PlayerControll>();
+        if (player != null)
+        {
+            _target = player.transform;
+            if (_destinationSetter != null)
+            {
+                _destinationSetter.target = _target;
+            }
+        }
+    }
+
+    private bool _isAttacking;
+
+    private void Update()
+    {
+        if (_target == null)
+        {
+            FindPlayerTarget();
+            return;
+        }
+
+        // Поворот спрайта лицом в сторону движения или к цели (исходные спрайты смотрят вправо)
+        if (_sr != null)
+        {
+            float horizontalDir = 0f;
+
+            if (_isAttacking || _target == null)
+            {
+                if (_target != null)
+                    horizontalDir = _target.position.x - transform.position.x;
+            }
+            else
+            {
+                if (_aiPath != null && Mathf.Abs(_aiPath.velocity.x) > 0.1f)
+                    horizontalDir = _aiPath.velocity.x;
+                else if (_rb != null && Mathf.Abs(_rb.linearVelocity.x) > 0.1f)
+                    horizontalDir = _rb.linearVelocity.x;
+                else if (_target != null)
+                    horizontalDir = _target.position.x - transform.position.x;
+            }
+
+            if (Mathf.Abs(horizontalDir) > 0.05f)
+            {
+                _sr.flipX = horizontalDir < 0f;
+            }
+        }
+
+        // Стрельба из лука по кулдауну
+        if (_isRanged && _arrowPrefab != null && !_isAttacking)
+        {
+            float distToTarget = Vector2.Distance(transform.position, _target.position);
+            if (distToTarget <= _attackRange && Time.time >= _nextShootTime)
+            {
+                ShootArrow();
+            }
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (_target == null) return;
+
+        if (_isAttacking)
+        {
+            if (_rb != null) _rb.linearVelocity = Vector2.zero;
+            if (_animator != null && _animator.isActiveAndEnabled)
+            {
+                _animator.SetBool("IsMoving", false);
+                _animator.SetFloat("Speed", 0f);
+            }
+            return;
+        }
+
+        bool hasActiveAstar = AstarPath.active != null && _aiPath != null && _aiPath.canMove;
+
+        if (!hasActiveAstar && _rb != null)
+        {
+            Vector2 toTarget = _target.position - transform.position;
+            float distance = toTarget.magnitude;
+            float desiredDistance = _isRanged ? _stoppingDistance : 0.6f;
+
+            if (distance > desiredDistance)
+            {
+                _rb.linearVelocity = toTarget.normalized * _moveSpeed;
+            }
+            else
+            {
+                _rb.linearVelocity = Vector2.zero;
+            }
+        }
+
+        if (_animator != null && _animator.isActiveAndEnabled)
+        {
+            bool isMoving = _rb != null && _rb.linearVelocity.sqrMagnitude > 0.05f;
+            if (hasActiveAstar && _aiPath != null)
+                isMoving = _aiPath.velocity.sqrMagnitude > 0.05f;
+
+            _animator.SetBool("IsMoving", isMoving);
+            _animator.SetFloat("Speed", isMoving ? _moveSpeed : 0f);
+        }
     }
 
     private void LateUpdate()
@@ -56,29 +207,97 @@ public class Enemy : MonoBehaviour
             _sr.sortingOrder = 1000 + Mathf.RoundToInt(-transform.position.y * 100);
     }
 
-    private async void OnTriggerEnter2D(Collider2D other)
+    private void ShootArrow()
     {
-        if (other.CompareTag("Player"))
+        _nextShootTime = Time.time + _attackCooldown;
+        StartCoroutine(ShootArrowRoutine());
+    }
+
+    private IEnumerator ShootArrowRoutine()
+    {
+        _isAttacking = true;
+        if (_animator != null && _animator.isActiveAndEnabled)
         {
-            await Task.Delay(250);
-            _isPlayerTouched = true;
-    
-            while (_isPlayerTouched)
+            _animator.SetTrigger("Attack");
+        }
+
+        if (_aiPath != null) _aiPath.canMove = false;
+        if (_rb != null) _rb.linearVelocity = Vector2.zero;
+
+        // Ожидание кадра полного натяжения тетивы перед вылетом стрелы
+        yield return new WaitForSeconds(0.35f);
+
+        if (_target != null && _arrowPrefab != null)
+        {
+            Vector2 dir = (_target.position - transform.position).normalized;
+            GameObject arrowObj = Instantiate(_arrowPrefab, transform.position, Quaternion.identity);
+            if (arrowObj.TryGetComponent(out EnemyArrow arrow))
             {
-                if (Time.timeScale > 0f)
-                {
-                   other.GetComponent<PlayerControll>().currentHealth_Player -= _damage;
-                }
-                await Task.Delay(1000);
+                arrow.Init(dir, _arrowDamage, _arrowSpeed);
+            }
+        }
+
+        // Доигрывание анимации спуска тетивы
+        yield return new WaitForSeconds(0.25f);
+
+        if (_aiPath != null) _aiPath.canMove = true;
+        _isAttacking = false;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        var player = other.GetComponentInParent<PlayerControll>();
+        if (player != null || other.CompareTag("Player"))
+        {
+            if (player == null) player = other.GetComponent<PlayerControll>();
+            if (player != null)
+            {
+                _damageRoutine ??= StartCoroutine(DamagePlayerRoutine(player));
             }
         }
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.GetComponentInParent<PlayerControll>() != null || other.CompareTag("Player"))
         {
-            _isPlayerTouched = false;
+            StopDamageRoutine();
         }
+    }
+
+    private void OnDisable()
+    {
+        StopDamageRoutine();
+        StopAllCoroutines();
+        _isAttacking = false;
+        if (_aiPath != null) _aiPath.canMove = true;
+    }
+
+    private void StopDamageRoutine()
+    {
+        if (_damageRoutine != null)
+        {
+            StopCoroutine(_damageRoutine);
+            _damageRoutine = null;
+        }
+    }
+
+    private IEnumerator DamagePlayerRoutine(PlayerControll player)
+    {
+        yield return new WaitForSeconds(0.25f);
+
+        while (player != null)
+        {
+            player.currentHealth_Player -= _damage;
+            yield return new WaitForSeconds(1f);
+        }
+
+        _damageRoutine = null;
+    }
+
+    private void Die()
+    {
+        StopDamageRoutine();
+        Destroy(gameObject);
     }
 }

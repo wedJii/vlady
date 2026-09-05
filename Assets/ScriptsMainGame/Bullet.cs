@@ -1,19 +1,27 @@
-using System; // ОБЯЗАТЕЛЬНО для Action
+using System;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
+    [SerializeField] private float lifetime = 5f;
     private PlayerControll playerScript;
     private Rigidbody2D rb;
     public bool isDuplicate = false;
     
     public event Action<Enemy> OnHitEnemy;
 
-    public void Awake() => rb = GetComponent<Rigidbody2D>();
+    public void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        playerScript = FindFirstObjectByType<PlayerControll>();
+    }
 
     public void Start()
     {
-        playerScript = FindFirstObjectByType<PlayerControll>();
+        Destroy(gameObject, lifetime);
+
+        if (playerScript == null)
+            playerScript = FindFirstObjectByType<PlayerControll>();
 
         Vector3 mouseScreenPos = Input.mousePosition;
         Vector3 mouseWorldPos = Camera.main != null ? Camera.main.ScreenToWorldPoint(mouseScreenPos) : Vector3.zero;
@@ -31,17 +39,24 @@ public class Bullet : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (!other.gameObject.CompareTag("Player"))
+        // Не наносим урон игроку
+        if (other.GetComponentInParent<PlayerControll>() != null || other.CompareTag("Player"))
+            return;
+
+        // Попадание во врага
+        var enemy = other.GetComponentInParent<Enemy>();
+        if (enemy != null)
         {
-            if (other.gameObject.CompareTag("Enemy"))
-            {
-                var enemy = other.GetComponent<Enemy>();
-                if (enemy != null && playerScript != null)
-                {
-                    enemy.currentHealth_Enemy -= playerScript.bulletDamage;
-                    OnHitEnemy?.Invoke(enemy);
-                }
-            }
+            float damage = playerScript != null ? playerScript.bulletDamage : 10f;
+            enemy.currentHealth_Enemy -= damage;
+            OnHitEnemy?.Invoke(enemy);
+            Destroy(gameObject);
+            return;
+        }
+
+        // Разрушение о твердые препятствия
+        if (!other.isTrigger)
+        {
             Destroy(gameObject);
         }
     }

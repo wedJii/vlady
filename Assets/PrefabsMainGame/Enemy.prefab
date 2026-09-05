@@ -112,7 +112,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.65}
+  m_AnchoredPosition: {x: 0, y: 1.35}
   m_SizeDelta: {x: 100, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &6652937441213117246
@@ -394,7 +394,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.48, y: 0.8}
+  m_Size: {x: 1, y: 2.3}
   m_EdgeRadius: 0
 --- !u!58 &1454520734733472990
 CircleCollider2D:
@@ -427,11 +427,11 @@ CircleCollider2D:
     serializedVersion: 2
     m_Bits: 4294967295
   m_IsTrigger: 1
-  m_UsedByEffector: 1
+  m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: -0.0075523853}
-  m_Radius: 0.5
+  m_Radius: 0.85
 --- !u!50 &4396973114234247389
 Rigidbody2D:
   serializedVersion: 5
@@ -473,6 +473,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
   _damage: 10
   healthSlider_Enemy: {fileID: 8172639608569229308}
+  _moveSpeed: 2.2
+  _stoppingDistance: 4
+  _isRanged: 1
+  _arrowPrefab: {fileID: 2000000000000000001, guid: d1e2f3a4b5c60718293a4b5c6d7e8f91, type: 3}
+  _attackRange: 7
+  _attackCooldown: 2
+  _arrowSpeed: 8
+  _arrowDamage: 10
 --- !u!114 &8220563157215226656
 MonoBehaviour:
   m_ObjectHideFlags: 0
