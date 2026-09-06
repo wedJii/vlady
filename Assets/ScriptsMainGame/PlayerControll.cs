@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
@@ -18,8 +19,24 @@ public class PlayerControll : MonoBehaviour
     [SerializeField] private GameObject LosePanel;
     private float _currentHealth_Player = 100;
     private float _maxHealth_Player = 100;
-    public int CurrentCoins;
+    [SerializeField] private TMP_Text coinsText;
 
+    private int currentCoins;
+
+    public int CurrentCoins
+    {
+        get => currentCoins;
+        set
+        {
+            currentCoins = value;
+            if (coinsText != null)
+            {
+                coinsText.text = "Coins: " + currentCoins.ToString();
+            }
+        }
+    }
+    public int coinIncome;
+    
     [Header("Camera Settings")]
     [SerializeField] private Camera cam;
     [SerializeField] private float targetZoomSize = 2.5f;

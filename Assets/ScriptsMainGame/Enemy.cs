@@ -53,6 +53,7 @@ public class Enemy : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float _moveSpeed = 2.2f;
     [SerializeField] private float _stoppingDistance = 4f;
+    [SerializeField] private GameObject coinPrefab;
 
     [Header("Ranged Attack (Bow)")]
     [SerializeField] private bool _isRanged = true;
@@ -119,8 +120,7 @@ public class Enemy : MonoBehaviour
             FindPlayerTarget();
             return;
         }
-
-        // Поворот спрайта лицом в сторону движения или к цели (исходные спрайты смотрят вправо)
+        
         if (_sr != null)
         {
             float horizontalDir = 0f;
@@ -298,6 +298,7 @@ public class Enemy : MonoBehaviour
     private void Die()
     {
         StopDamageRoutine();
+        Instantiate(coinPrefab, transform.position, Quaternion.identity);
         Destroy(gameObject);
     }
 }
