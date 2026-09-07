@@ -18,4 +18,5 @@ MonoBehaviour:
   description: speed plate
   isStackable: 0
   maxStack: 1
+  PlateRarity: Common
   bonusSpeed: 5

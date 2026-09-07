@@ -5002,7 +5002,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 274d6755e2d292445a158df624009fad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Inventory
-  capacity: 20
+  capacity: 15
   slots:
   - item: {fileID: 11400000, guid: f235b2ac790c737409c6c2e5abf7f23e, type: 2}
     amount: 1
@@ -5010,7 +5010,9 @@ MonoBehaviour:
   plateSlots:
   - item: {fileID: 11400000, guid: f235b2ac790c737409c6c2e5abf7f23e, type: 2}
     amount: 1
-  - item: {fileID: 11400000, guid: a7d6865ed7d80d045b7cef6ef234cd3e, type: 2}
+  - item: {fileID: 11400000, guid: 6bcd8e9ff5b6d28409150b3f236079ad, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: fc68ccb37782a464d90afe02e46a2204, type: 2}
     amount: 1
 --- !u!4 &1689548485
 Transform:

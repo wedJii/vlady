@@ -16,5 +16,6 @@ MonoBehaviour:
   displayName: 
   icon: {fileID: 0}
   description: 
-  isStackable: 1
-  maxStack: 99
+  isStackable: 0
+  maxStack: 1
+  PlateRarity: Rare

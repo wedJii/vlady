@@ -18,4 +18,5 @@ MonoBehaviour:
   description: 
   isStackable: 0
   maxStack: 1
+  PlateRarity: Common
   bonusDamage: 5

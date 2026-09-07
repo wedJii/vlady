@@ -2,6 +2,7 @@ using UnityEngine;
 
 public abstract class UbgradePlate : Item
 {
+    public string PlateRarity;
     private void OnValidate()
     {
         isStackable = false;
@@ -10,4 +11,5 @@ public abstract class UbgradePlate : Item
     
     public abstract override void OnApply(PlayerControll player);
     public abstract override void OnRemove(PlayerControll player);
+    
 }
