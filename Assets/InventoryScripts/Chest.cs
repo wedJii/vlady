@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
@@ -84,20 +84,11 @@ public class Chest : MonoBehaviour
 
     private void EnsurePrompt()
     {
-        if (interactionPrompt != null) return;
+        if (interactionPrompt == null)
+            interactionPrompt = transform.Find("InteractionPrompt")?.gameObject;
 
-        var promptGo = new GameObject("InteractionPrompt", typeof(TextMeshPro));
-        promptGo.transform.SetParent(transform, false);
-        promptGo.transform.localPosition = new Vector3(0f, 0.85f, 0f);
-
-        var tmp = promptGo.GetComponent<TextMeshPro>();
-        tmp.text = "<color=#FFEAA7>[<b>E</b>]</color> Открыть";
-        tmp.fontSize = 3.5f;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.sortingOrder = 3000;
-
-        interactionPrompt = promptGo;
-        interactionPrompt.SetActive(false);
+        if (interactionPrompt != null)
+            interactionPrompt.SetActive(false);
     }
 
     private void SetPromptActive(bool active)

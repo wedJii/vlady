@@ -22,6 +22,7 @@ public class UI_Inventory : MonoBehaviour
     [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
     [SerializeField] private bool startOpen = false;
     [SerializeField] private UI_Inventory linkedTransferUI;
+    [SerializeField] private Image dragGhostImage;
 
     private readonly List<UI_InventorySlot> _uiSlots = new();
     private readonly List<UI_InventorySlot> _uiPlateSlots = new();
@@ -238,8 +239,21 @@ public class UI_Inventory : MonoBehaviour
     {
         if (_dragGhostImage != null) return;
 
-        var ghostObj = new GameObject("GlobalDragGhost", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
+        if (dragGhostImage != null)
+        {
+            _dragGhostImage = dragGhostImage;
+            return;
+        }
+
         var rootCanvas = _canvas != null ? _canvas.rootCanvas : FindFirstObjectByType<Canvas>();
+        var found = rootCanvas != null ? rootCanvas.transform.Find("GlobalDragGhost") : null;
+        if (found != null && found.TryGetComponent(out Image img))
+        {
+            _dragGhostImage = img;
+            return;
+        }
+
+        var ghostObj = new GameObject("GlobalDragGhost", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
         ghostObj.transform.SetParent(rootCanvas != null ? rootCanvas.transform : transform.root, false);
 
         _dragGhostImage = ghostObj.GetComponent<Image>();

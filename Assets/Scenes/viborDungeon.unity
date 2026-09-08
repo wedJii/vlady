@@ -503,6 +503,12 @@ MonoBehaviour:
   defaultStarterItems:
   - item: {fileID: 11400000, guid: f235b2ac790c737409c6c2e5abf7f23e, type: 2}
     amount: 1
+  - item: {fileID: 11400000, guid: fc68ccb37782a464d90afe02e46a2204, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: 6bcd8e9ff5b6d28409150b3f236079ad, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: d68568ee333a5664491b91a0e9d60db3, type: 2}
+    amount: 1
   grantItemsToStashNow: 0
   dungeonSceneName: Dungeon 1
 --- !u!1001 &282361863
@@ -647,6 +653,7 @@ MonoBehaviour:
   toggleKey: 9
   startOpen: 1
   linkedTransferUI: {fileID: 599913669}
+  dragGhostImage: {fileID: 0}
 --- !u!224 &300000002
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1922,6 +1929,7 @@ MonoBehaviour:
   toggleKey: 9
   startOpen: 1
   linkedTransferUI: {fileID: 300000001}
+  dragGhostImage: {fileID: 0}
 --- !u!114 &599913670
 MonoBehaviour:
   m_ObjectHideFlags: 0

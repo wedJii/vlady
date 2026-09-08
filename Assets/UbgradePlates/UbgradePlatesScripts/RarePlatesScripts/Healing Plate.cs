@@ -1,17 +1,19 @@
 using UnityEngine;
 [CreateAssetMenu(fileName = "Heal Plate", menuName = "Inventory/Plates/Heal Plate")]
-public class NewMonoBehaviourScript : UbgradePlate
+public class HealingPlate : UbgradePlate
 {
-    PlayerControll cashedPlayer;
+    private PlayerControll cachedPlayer;
+
     public override void OnApply(PlayerControll player)
     {
-        cashedPlayer = player;
+        cachedPlayer = player;
         player.OnBulletSpawned += SubscribeToBullet;
     }
 
     public override void OnRemove(PlayerControll player)
     {
         player.OnBulletSpawned -= SubscribeToBullet;
+        cachedPlayer = null;
     }
     
     private void SubscribeToBullet(Bullet bullet)
@@ -21,6 +23,9 @@ public class NewMonoBehaviourScript : UbgradePlate
     
     private void HealingAffect(Enemy enemy)
     {
-        cashedPlayer.currentHealth_Player += 5f;
+        if (cachedPlayer != null)
+        {
+            cachedPlayer.currentHealth_Player = Mathf.Min(cachedPlayer.currentHealth_Player + 5f, cachedPlayer.maxHealth_Player);
+        }
     }
 }

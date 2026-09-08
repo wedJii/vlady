@@ -55,10 +55,13 @@ public class Bullet : MonoBehaviour
             return;
         }
 
-        // Разрушение о твердые препятствия
+        // Разрушение или отскок о твердые препятствия
         if (!other.isTrigger)
         {
-            if (!isRicochet) Destroy(gameObject);
+            if (TryGetComponent(out RicochetModifier ricochet) && ricochet.Bounce(other))
+                return;
+
+            Destroy(gameObject);
         }
     }
 }

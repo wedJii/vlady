@@ -19,8 +19,11 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
     private UI_Inventory _uiInventory;
     private CanvasGroup _canvasGroup;
     private Tween _hoverTween;
-    private Color _originalBgColor = new(0.16f, 0.18f, 0.24f, 0.95f);
-    private Color _plateBgColor = new(0.12f, 0.28f, 0.38f, 0.98f);
+    [Header("Colors (Inspector)")]
+    [SerializeField] private Color normalBgColor = new(0.16f, 0.18f, 0.24f, 0.95f);
+    [SerializeField] private Color plateBgColor = new(0.12f, 0.28f, 0.38f, 0.98f);
+    [SerializeField] private Color placeholderNormalColor = new(0.25f, 0.55f, 0.85f, 0.85f);
+    [SerializeField] private Color placeholderPlateColor = new(0.25f, 0.75f, 0.85f, 0.85f);
 
     public UI_Inventory UIInventory => _uiInventory;
     public int SlotIndex => _slotIndex;
@@ -67,7 +70,7 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
         if (backgroundImage != null)
         {
-            backgroundImage.color = isPlateSlot ? _plateBgColor : _originalBgColor;
+            backgroundImage.color = isPlateSlot ? plateBgColor : normalBgColor;
         }
     }
 
@@ -77,7 +80,7 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
         if (backgroundImage != null)
         {
-            backgroundImage.color = isPlateSlot ? _plateBgColor : _originalBgColor;
+            backgroundImage.color = isPlateSlot ? plateBgColor : normalBgColor;
         }
 
         if (slot != null && !slot.IsEmpty && slot.item != null)
@@ -93,7 +96,7 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
                 else
                 {
                     icon.sprite = null;
-                    icon.color = isPlateSlot ? new Color(0.25f, 0.75f, 0.85f, 0.85f) : new Color(0.25f, 0.55f, 0.85f, 0.85f);
+                    icon.color = isPlateSlot ? placeholderPlateColor : placeholderNormalColor;
                     icon.enabled = true;
                 }
             }
