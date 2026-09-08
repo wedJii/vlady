@@ -17,6 +17,7 @@ public class RicochetPlate : UbgradePlate
 
     private void ApplyRicochet(Bullet bullet)
     {
+        bullet.isRicochet = true;
         if (bullet.TryGetComponent(out RicochetModifier existingModifier))
         {
             existingModifier.bounceCount += extraBounces;

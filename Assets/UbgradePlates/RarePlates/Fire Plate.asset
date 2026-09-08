@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12e1e89ad29af6c48be0297b30d7dd3f, type: 3}
   m_Name: Fire Plate
   m_EditorClassIdentifier: Assembly-CSharp::BurnPlate
-  id: 
-  displayName: 
+  id: fire
+  displayName: Fire Plate
   icon: {fileID: 0}
   description: 
   isStackable: 0

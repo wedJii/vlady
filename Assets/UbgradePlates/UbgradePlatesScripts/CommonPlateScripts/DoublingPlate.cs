@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Doubling Plate", menuName = "Inventory/Plates/Doubling Plate")]
@@ -15,7 +16,7 @@ public class DoublingPlate : UbgradePlate
         player.OnBulletSpawned -= ApplyEffect;
     }
 
-    private void ApplyEffect(Bullet originalBullet)
+    async private void ApplyEffect(Bullet originalBullet)
     {
         if (originalBullet.isDuplicate) return;
 
@@ -23,6 +24,7 @@ public class DoublingPlate : UbgradePlate
 
         if (randomValue <= chanceOfDoubling)
         {
+            await Task.Delay(100);
             GameObject duplicatedObj = Instantiate(
                 originalBullet.gameObject, 
                 originalBullet.transform.position, 
