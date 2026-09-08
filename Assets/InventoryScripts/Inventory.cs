@@ -25,6 +25,16 @@ public class Inventory : MonoBehaviour
         EnsurePlateCapacity();
     }
 
+    private void OnValidate()
+    {
+        if (Application.isPlaying)
+        {
+            EnsureCapacity();
+            EnsurePlateCapacity();
+            OnInventoryChanged?.Invoke();
+        }
+    }
+
     public void EnsureCapacity()
     {
         if (slots == null) slots = new List<InventorySlot>();
@@ -168,15 +178,15 @@ public class Inventory : MonoBehaviour
         return amount <= 0;
     }
 
-    public bool ContainsItem(Item item, int amount = 1)
+    public int CountItem(Item item)
     {
-        if (item == null) return false;
+        if (item == null) return 0;
         int count = 0;
         if (slots != null)
         {
             foreach (var s in slots)
             {
-                if (s != null && s.item == item)
+                if (s != null && s.item != null && IsSameItem(s.item, item))
                     count += s.amount;
             }
         }
@@ -184,12 +194,23 @@ public class Inventory : MonoBehaviour
         {
             foreach (var s in plateSlots)
             {
-                if (s != null && s.item == item)
+                if (s != null && s.item != null && IsSameItem(s.item, item))
                     count += s.amount;
             }
         }
-        return count >= amount;
+        return count;
     }
+
+    public static bool IsSameItem(Item a, Item b)
+    {
+        if (a == b) return true;
+        if (a == null || b == null) return false;
+        if (!string.IsNullOrEmpty(a.id) && !string.IsNullOrEmpty(b.id))
+            return a.id == b.id;
+        return a.name == b.name;
+    }
+
+    public bool ContainsItem(Item item, int amount = 1) => CountItem(item) >= amount;
 
     public void MoveOrMerge(int fromIndex, bool fromIsPlate, int toIndex, bool toIsPlate, PlayerControll player = null)
     {

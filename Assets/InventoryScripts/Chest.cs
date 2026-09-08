@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
@@ -29,6 +29,7 @@ public class Chest : MonoBehaviour
     private bool _isOpen;
     private bool _isPlayerNear;
     private bool _initialized;
+    private float _lastInteractTime;
 
     private static readonly int IsOpenHash = Animator.StringToHash("IsOpen");
 
@@ -116,12 +117,32 @@ public class Chest : MonoBehaviour
 
         if (_isOpen)
         {
-            // Когда сундук открыт, закрытием по E/Esc/Tab управляет UI_Chest.
-            // Сундук лишь проверяет, не отошел ли игрок слишком далеко.
             if (dist > interactionRadius + 1.5f)
             {
                 CloseChest();
+                return;
             }
+
+            bool closeInteract = false;
+            if (Keyboard.current != null && (Keyboard.current.eKey.wasPressedThisFrame || Keyboard.current.escapeKey.wasPressedThisFrame))
+                closeInteract = true;
+
+            if (!closeInteract)
+            {
+                try
+                {
+                    if (Input.GetKeyDown(interactionKey) || Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Escape))
+                        closeInteract = true;
+                }
+                catch { }
+            }
+
+            if (closeInteract && (Time.unscaledTime - _lastInteractTime >= 0.2f))
+            {
+                CloseChest();
+                return;
+            }
+
             return;
         }
 
@@ -147,7 +168,7 @@ public class Chest : MonoBehaviour
                 catch { }
             }
 
-            if (interactPressed)
+            if (interactPressed && (Time.unscaledTime - _lastInteractTime >= 0.25f) && (Time.unscaledTime - UI_Chest.LastCloseTime >= 0.25f))
             {
                 OpenChest();
             }
@@ -175,6 +196,7 @@ public class Chest : MonoBehaviour
     public void OpenChest()
     {
         if (_isOpen) return;
+        _lastInteractTime = Time.unscaledTime;
         _isOpen = true;
 
         SetPromptActive(false);
@@ -199,6 +221,7 @@ public class Chest : MonoBehaviour
     public void CloseChest()
     {
         if (!_isOpen) return;
+        _lastInteractTime = Time.unscaledTime;
         _isOpen = false;
 
         if (_animator != null)
@@ -221,6 +244,7 @@ public class Chest : MonoBehaviour
 
     public void OnOpened()
     {
+        _lastInteractTime = Time.unscaledTime;
         _isOpen = true;
         SetPromptActive(false);
         if (_animator != null)
@@ -231,6 +255,7 @@ public class Chest : MonoBehaviour
 
     public void OnClosed()
     {
+        _lastInteractTime = Time.unscaledTime;
         _isOpen = false;
         if (_animator != null)
             _animator.SetBool(IsOpenHash, false);

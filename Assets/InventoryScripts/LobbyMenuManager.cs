@@ -16,11 +16,55 @@ public class LobbyMenuManager : MonoBehaviour
     [SerializeField] private Inventory stashInventory;
     [SerializeField] private Inventory raidInventory;
 
+    [Header("UI Panels & Buttons")]
+    [SerializeField] private GameObject lootMenu;
+    [SerializeField] private GameObject startButton;
+
     [Header("Starter Configuration")]
     [SerializeField] private List<StarterItemEntry> defaultStarterItems = new();
 
+    [Header("Inspector Cheats (Выдача в сундук)")]
+    [Tooltip("Нажмите галочку в Инспекторе, чтобы выдать предметы из списка defaultStarterItems в сундук")]
+    [SerializeField] private bool grantItemsToStashNow;
+
     [Header("Scene Transition")]
     [SerializeField] private string dungeonSceneName = "Dungeon 1";
+
+    private bool _isLoadingLobby;
+
+    public GameObject LootMenu => lootMenu;
+    public GameObject StartButton => startButton;
+
+    private void OnEnable()
+    {
+        if (stashInventory != null)
+            stashInventory.OnInventoryChanged += OnLobbyInventoryChanged;
+        if (raidInventory != null)
+            raidInventory.OnInventoryChanged += OnLobbyInventoryChanged;
+    }
+
+    private void OnDisable()
+    {
+        if (stashInventory != null)
+            stashInventory.OnInventoryChanged -= OnLobbyInventoryChanged;
+        if (raidInventory != null)
+            raidInventory.OnInventoryChanged -= OnLobbyInventoryChanged;
+    }
+
+    private void OnLobbyInventoryChanged()
+    {
+        if (_isLoadingLobby) return;
+        RaidLoadoutManager.SaveLoadout(stashInventory, raidInventory);
+    }
+
+    private void OnValidate()
+    {
+        if (grantItemsToStashNow)
+        {
+            grantItemsToStashNow = false;
+            GiveStarterItems();
+        }
+    }
 
     private void Start()
     {
@@ -32,66 +76,102 @@ public class LobbyMenuManager : MonoBehaviour
         if (raidInventory != null)
             raidInventory.plateCapacity = 0;
 
-        // 1. Считываем все предметы, настроенные в Инспекторе
-        var inspectorItems = new List<InventorySlot>();
-
-        if (defaultStarterItems != null && defaultStarterItems.Count > 0)
-        {
-            foreach (var entry in defaultStarterItems)
-            {
-                if (entry.item != null && entry.amount > 0)
-                    inspectorItems.Add(new InventorySlot(entry.item, entry.amount));
-            }
-        }
-
-        if (stashInventory != null && stashInventory.Slots != null)
-        {
-            foreach (var s in stashInventory.Slots)
-            {
-                if (s != null && !s.IsEmpty && s.item != null)
-                    inspectorItems.Add(new InventorySlot(s.item, s.amount));
-            }
-        }
-
-        // 2. Первичная инициализация при чистом старте
-        if (!RaidLoadoutManager.IsInitialized || !RaidLoadoutManager.HasAnyItems)
+        _isLoadingLobby = true;
+        try
         {
             int stashCap = stashInventory != null ? stashInventory.Capacity : 20;
             int raidCap = raidInventory != null ? raidInventory.Capacity : 8;
             int plateCap = 3;
-            RaidLoadoutManager.Initialize(inspectorItems, stashCap, raidCap, plateCap, force: true);
-        }
 
-        // 3. Загружаем инвентарь
-        RaidLoadoutManager.LoadToLobby(stashInventory, raidInventory);
-
-        // 4. Подтягиваем настроенные в Инспекторе предметы, если они отсутствуют у игрока (например, после смерти)
-        if (inspectorItems.Count > 0 && stashInventory != null)
-        {
-            bool addedAny = false;
-            foreach (var extra in inspectorItems)
+            if (!RaidLoadoutManager.IsInitialized)
             {
-                bool hasInStash = stashInventory.ContainsItem(extra.item, 1);
-                bool hasInRaid = raidInventory != null && raidInventory.ContainsItem(extra.item, 1);
-
-                if (!hasInStash && !hasInRaid)
+                var starterSlots = new List<InventorySlot>();
+                if (defaultStarterItems != null)
                 {
-                    stashInventory.AddItem(extra.item, extra.amount);
-                    addedAny = true;
+                    foreach (var entry in defaultStarterItems)
+                    {
+                        if (entry.item != null && entry.amount > 0)
+                        {
+                            RaidLoadoutManager.RegisterItem(entry.item);
+                            starterSlots.Add(new InventorySlot(entry.item, entry.amount));
+                        }
+                    }
                 }
+                RaidLoadoutManager.Initialize(starterSlots, stashCap, raidCap, plateCap, force: false);
             }
 
-            if (addedAny)
-            {
-                RaidLoadoutManager.SaveLoadout(stashInventory, raidInventory);
-            }
+            RaidLoadoutManager.LoadToLobby(stashInventory, raidInventory);
         }
+        finally
+        {
+            _isLoadingLobby = false;
+        }
+
+        RefreshAllUI();
+
+        if (lootMenu != null)
+            lootMenu.SetActive(false);
+
+        if (startButton != null)
+            startButton.SetActive(false);
     }
 
     private void Update()
     {
+        bool escPressed = false;
         if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.escapeKey.wasPressedThisFrame)
-            BackToMainMenu();
+            escPressed = true;
+
+        if (!escPressed)
+        {
+            try
+            {
+                if (Input.GetKeyDown(KeyCode.Escape))
+                    escPressed = true;
+            }
+            catch { }
+        }
+
+        if (escPressed)
+        {
+            if (lootMenu != null && lootMenu.activeSelf)
+                CloseLootMenu();
+            else
+                BackToMainMenu();
+        }
+    }
+
+    public void RefreshAllUI()
+    {
+        if (lootMenu != null)
+        {
+            foreach (var uiInv in lootMenu.GetComponentsInChildren<UI_Inventory>(true))
+                uiInv.UpdateUI();
+        }
+    }
+
+    public void SelectDungeon(string sceneName)
+    {
+        dungeonSceneName = sceneName;
+        if (lootMenu != null)
+        {
+            lootMenu.SetActive(true);
+            RefreshAllUI();
+        }
+        if (startButton != null)
+        {
+            startButton.SetActive(true);
+        }
+    }
+
+    public void SelectDungeon1() => SelectDungeon("Dungeon 1");
+
+    public void CloseLootMenu()
+    {
+        if (lootMenu != null)
+            lootMenu.SetActive(false);
+        if (startButton != null)
+            startButton.SetActive(false);
     }
 
     public void StartRaid()
@@ -106,5 +186,86 @@ public class LobbyMenuManager : MonoBehaviour
         RaidLoadoutManager.SaveLoadout(stashInventory, raidInventory);
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
+    }
+
+    [ContextMenu("Выдать все пластины в сундук")]
+    public void GiveAllPlates()
+    {
+        var allPlates = Resources.FindObjectsOfTypeAll<UbgradePlate>();
+#if UNITY_EDITOR
+        if (allPlates == null || allPlates.Length == 0)
+        {
+            var guids = UnityEditor.AssetDatabase.FindAssets("t:UbgradePlate");
+            var list = new List<UbgradePlate>();
+            foreach (var guid in guids)
+            {
+                var path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                var p = UnityEditor.AssetDatabase.LoadAssetAtPath<UbgradePlate>(path);
+                if (p != null) list.Add(p);
+            }
+            allPlates = list.ToArray();
+        }
+#endif
+        if (allPlates == null || allPlates.Length == 0)
+        {
+            Debug.LogWarning("[LobbyMenuManager] Пластины не найдены в проекте!");
+            return;
+        }
+
+        int count = 0;
+        foreach (var plate in allPlates)
+        {
+            if (plate == null) continue;
+            RaidLoadoutManager.RegisterItem(plate);
+            if (stashInventory != null)
+            {
+                stashInventory.AddItem(plate, 1);
+                count++;
+            }
+        }
+
+        if (count > 0)
+        {
+            RaidLoadoutManager.SaveLoadout(stashInventory, raidInventory);
+            RefreshAllUI();
+            Debug.Log($"<color=green>[LobbyMenuManager]</color> Успешно выдано {count} пластин в сундук!");
+        }
+    }
+
+    [ContextMenu("Выдать стартовые предметы в сундук")]
+    public void GiveStarterItems()
+    {
+        if (defaultStarterItems == null || defaultStarterItems.Count == 0 || stashInventory == null)
+        {
+            Debug.LogWarning("[LobbyMenuManager] Список defaultStarterItems пуст!");
+            return;
+        }
+
+        int added = 0;
+        foreach (var entry in defaultStarterItems)
+        {
+            if (entry.item != null && entry.amount > 0)
+            {
+                RaidLoadoutManager.RegisterItem(entry.item);
+                stashInventory.AddItem(entry.item, entry.amount);
+                added += entry.amount;
+            }
+        }
+
+        if (added > 0)
+        {
+            RaidLoadoutManager.SaveLoadout(stashInventory, raidInventory);
+            RefreshAllUI();
+            Debug.Log($"<color=green>[LobbyMenuManager]</color> Выдано {added} стартовых предметов в сундук!");
+        }
+    }
+
+    [ContextMenu("Сбросить сохранение инвентаря")]
+    public void ResetInventorySave()
+    {
+        RaidLoadoutManager.ClearSaveData();
+        Start();
+        RefreshAllUI();
+        Debug.Log("<color=yellow>[LobbyMenuManager]</color> Сохранения сброшены к дефолту.");
     }
 }

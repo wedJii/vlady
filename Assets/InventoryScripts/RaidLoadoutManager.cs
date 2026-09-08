@@ -10,6 +10,7 @@ public static class RaidLoadoutManager
     private const string PREFS_COLLECTED_KEY = "Save_CollectedWorldItems";
     private const string PREFS_INITIALIZED_KEY = "Save_ProfileInitialized";
     private const string PREFS_IN_RAID_KEY = "Save_PlayerIsInRaid";
+    private const string PREFS_GRANTED_STARTER_KEY = "Save_GrantedStarterItems";
 
     private static readonly List<InventorySlot> _stashSlots = new();
     private static readonly List<InventorySlot> _raidSlots = new();
@@ -50,12 +51,12 @@ public static class RaidLoadoutManager
 
     public static void CheckCrashOrAbandonment()
     {
-        // Если при запуске флаг InRaid == 1, значит игрок вылетел, закрыл игру (Alt+F4) или вышел без эвакуации
         if (PlayerPrefs.GetInt(PREFS_IN_RAID_KEY, 0) == 1)
         {
-            Debug.LogWarning("<color=orange>[RaidLoadoutManager]</color> Обнаружен незавершенный рейд (вылет/выход из игры). Снаряжение рейда утеряно!");
+            Debug.LogWarning("<color=orange>[RaidLoadoutManager]</color> Незавершенный рейд. Снаряжение рейда утеряно.");
             foreach (var slot in _raidSlots) slot.Clear();
             foreach (var slot in _plateSlots) slot.Clear();
+            _collectedWorldItemIDs.Clear();
 
             PlayerPrefs.SetInt(PREFS_IN_RAID_KEY, 0);
             SaveToDisk();
@@ -105,12 +106,12 @@ public static class RaidLoadoutManager
     {
         CheckCrashOrAbandonment();
 
-        if (IsInitialized && !force && HasAnyItems) return;
+        if (IsInitialized && !force) return;
 
         if (PlayerPrefs.GetInt(PREFS_INITIALIZED_KEY, 0) == 1 && !force)
         {
             LoadFromDisk();
-            if (IsInitialized && HasAnyItems) return;
+            if (IsInitialized) return;
         }
 
         _stashSlots.Clear();
@@ -121,6 +122,8 @@ public static class RaidLoadoutManager
         while (_raidSlots.Count < raidCapacity) _raidSlots.Add(new InventorySlot());
         while (_plateSlots.Count < plateCapacity) _plateSlots.Add(new InventorySlot());
 
+        var grantedSet = new HashSet<string>();
+
         if (starterItems != null)
         {
             int index = 0;
@@ -130,14 +133,41 @@ public static class RaidLoadoutManager
                 {
                     _stashSlots[index].Set(slot.item, slot.amount);
                     RegisterItem(slot.item);
+                    string key = !string.IsNullOrEmpty(slot.item.id) ? slot.item.id : slot.item.name;
+                    if (!string.IsNullOrEmpty(key)) grantedSet.Add(key);
                     index++;
                 }
             }
         }
 
+        PlayerPrefs.SetString(PREFS_GRANTED_STARTER_KEY, string.Join(";", grantedSet));
         IsInitialized = true;
         PlayerPrefs.SetInt(PREFS_INITIALIZED_KEY, 1);
         SaveToDisk();
+    }
+
+    public static void SyncNewStarterItems(IEnumerable<LobbyMenuManager.StarterItemEntry> starterEntries, Inventory stashInventory, Inventory raidInventory = null)
+    {
+        if (starterEntries == null || stashInventory == null) return;
+
+        bool addedAny = false;
+        foreach (var entry in starterEntries)
+        {
+            if (entry.item == null || entry.amount <= 0) continue;
+            RegisterItem(entry.item);
+
+            int currentTotal = stashInventory.CountItem(entry.item) + (raidInventory != null ? raidInventory.CountItem(entry.item) : 0);
+            if (currentTotal < entry.amount)
+            {
+                stashInventory.AddItem(entry.item, entry.amount - currentTotal);
+                addedAny = true;
+            }
+        }
+
+        if (addedAny)
+        {
+            SaveLoadout(stashInventory, raidInventory);
+        }
     }
 
     public static void StartRaidSession(Inventory stashInventory, Inventory raidInventory)
@@ -151,7 +181,9 @@ public static class RaidLoadoutManager
             CopySlots(raidInventory.PlateSlots, _plateSlots, raidInventory.PlateCapacity > 0 ? raidInventory.PlateCapacity : 3);
         }
 
+        _collectedWorldItemIDs.Clear();
         PlayerPrefs.SetInt(PREFS_IN_RAID_KEY, 1);
+        SaveToDisk();
         PlayerPrefs.Save();
     }
 
@@ -174,13 +206,20 @@ public static class RaidLoadoutManager
     {
         CheckCrashOrAbandonment();
 
-        if (stashInventory != null && _stashSlots.Count > 0)
+        if (stashInventory != null)
+        {
+            while (_stashSlots.Count < stashInventory.Capacity)
+                _stashSlots.Add(new InventorySlot());
             stashInventory.LoadFromSlots(_stashSlots);
+        }
 
-        if (raidInventory != null && _raidSlots.Count > 0)
+        if (raidInventory != null)
+        {
+            while (_raidSlots.Count < raidInventory.Capacity)
+                _raidSlots.Add(new InventorySlot());
             raidInventory.LoadFromSlots(_raidSlots);
+        }
 
-        // Переносим все вынесенные из рейда пластины в обычные ячейки инвентаря лобби
         if (_plateSlots.Count > 0)
         {
             for (int i = 0; i < _plateSlots.Count; i++)
@@ -222,7 +261,7 @@ public static class RaidLoadoutManager
 
         PlayerPrefs.SetInt(PREFS_IN_RAID_KEY, 0);
         SaveToDisk();
-        Debug.Log("<color=green>[RaidLoadoutManager]</color> Успешная эвакуация! Лут и пластины сохранены.");
+        Debug.Log("<color=green>[RaidLoadoutManager]</color> Успешная эвакуация! Снаряжение и пластины сохранены.");
     }
 
     public static void SaveDungeonLoot(Inventory dungeonInventory) => OnSuccessfulExtraction(dungeonInventory);
@@ -231,6 +270,7 @@ public static class RaidLoadoutManager
     {
         foreach (var slot in _raidSlots) slot.Clear();
         foreach (var slot in _plateSlots) slot.Clear();
+        _collectedWorldItemIDs.Clear();
 
         PlayerPrefs.SetInt(PREFS_IN_RAID_KEY, 0);
         SaveToDisk();
@@ -241,10 +281,11 @@ public static class RaidLoadoutManager
     {
         foreach (var slot in _raidSlots) slot.Clear();
         foreach (var slot in _plateSlots) slot.Clear();
+        _collectedWorldItemIDs.Clear();
 
         PlayerPrefs.SetInt(PREFS_IN_RAID_KEY, 0);
         SaveToDisk();
-        Debug.LogWarning("<color=red>[RaidLoadoutManager]</color> Рейд покинут! Все рейдовые вещи и пластины утеряны.");
+        Debug.LogWarning("<color=red>[RaidLoadoutManager]</color> Рейд покинут! Снаряжение рейда и пластины утеряны.");
     }
 
     public static void SaveToDisk()
@@ -371,12 +412,11 @@ public static class RaidLoadoutManager
                 }
             }
 
-            if (_plateSlots.Count == 0)
-            {
-                while (_plateSlots.Count < 3) _plateSlots.Add(new InventorySlot());
-            }
+            while (_stashSlots.Count < 20) _stashSlots.Add(new InventorySlot());
+            while (_raidSlots.Count < 8) _raidSlots.Add(new InventorySlot());
+            while (_plateSlots.Count < 3) _plateSlots.Add(new InventorySlot());
 
-            IsInitialized = _stashSlots.Count > 0 || _raidSlots.Count > 0 || _plateSlots.Count > 0;
+            IsInitialized = PlayerPrefs.GetInt(PREFS_INITIALIZED_KEY, 0) == 1 || _stashSlots.Count > 0 || _raidSlots.Count > 0;
         }
         catch (Exception ex)
         {
@@ -392,6 +432,7 @@ public static class RaidLoadoutManager
         PlayerPrefs.DeleteKey(PREFS_COLLECTED_KEY);
         PlayerPrefs.DeleteKey(PREFS_INITIALIZED_KEY);
         PlayerPrefs.DeleteKey(PREFS_IN_RAID_KEY);
+        PlayerPrefs.DeleteKey(PREFS_GRANTED_STARTER_KEY);
         PlayerPrefs.Save();
         _stashSlots.Clear();
         _raidSlots.Clear();

@@ -203,7 +203,7 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
             var draggedItem = sourceList[draggedSlot.SlotIndex]?.item;
 
-            // В слот пластины можно класть ТОЛЬКО пластины (UbgradePlate)
+            
             if (this.IsPlateSlot && draggedItem != null && !(draggedItem is UbgradePlate))
             {
                 RejectShake();

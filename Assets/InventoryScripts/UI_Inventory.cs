@@ -16,6 +16,7 @@ public class UI_Inventory : MonoBehaviour
 
     [Header("Slot Containers")]
     [SerializeField] private Transform slotsParent;
+    [SerializeField] private GameObject plateHeaderLabel;
 
     [Header("Behavior Settings")]
     [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
@@ -338,43 +339,18 @@ public class UI_Inventory : MonoBehaviour
                 allSlots[i].gameObject.SetActive(false);
             }
 
-            // Маленькая аккуратная надпись «ПЛАСТИНЫ» над 4-м рядом
-            var headerObj = transform.Find("PlateHeaderLabel");
-            if (headerObj == null)
-            {
-                var go = new GameObject("PlateHeaderLabel", typeof(RectTransform), typeof(TextMeshProUGUI), typeof(LayoutElement));
-                go.transform.SetParent(transform, false);
-
-                var le = go.GetComponent<LayoutElement>();
-                le.ignoreLayout = true;
-
-                var tmp = go.GetComponent<TextMeshProUGUI>();
-                if (_uiSlots.Count > 0 && _uiSlots[0] != null && _uiSlots[0].AmountText != null && _uiSlots[0].AmountText.font != null)
-                    tmp.font = _uiSlots[0].AmountText.font;
-
-                tmp.text = "<b><color=#4ECDC4>ПЛАСТИНЫ</color></b>";
-                tmp.fontSize = 11;
-                tmp.alignment = TextAlignmentOptions.Center;
-                tmp.raycastTarget = false;
-
-                var rt = go.GetComponent<RectTransform>();
-                rt.anchorMin = new Vector2(0.5f, 0f);
-                rt.anchorMax = new Vector2(0.5f, 0f);
-                rt.pivot = new Vector2(0.5f, 0f);
-                rt.anchoredPosition = new Vector2(0f, 85f);
-                rt.sizeDelta = new Vector2(200f, 18f);
-            }
+            if (plateHeaderLabel != null)
+                plateHeaderLabel.SetActive(true);
+            else if (transform.Find("PlateHeaderLabel") is { } found)
+                (plateHeaderLabel = found.gameObject).SetActive(true);
         }
         else
         {
-            var headerObj = transform.Find("PlateHeaderLabel");
-            if (headerObj != null)
-            {
-                if (Application.isPlaying) Destroy(headerObj.gameObject);
-                else DestroyImmediate(headerObj.gameObject);
-            }
+            if (plateHeaderLabel != null)
+                plateHeaderLabel.SetActive(false);
+            else if (transform.Find("PlateHeaderLabel") is { } found)
+                (plateHeaderLabel = found.gameObject).SetActive(false);
 
-            // Для обычных инвентарей без пластин (в сундуках и viborDungeon)
             for (int i = 0; i < allSlots.Count; i++)
             {
                 if (i < inventory.Capacity)

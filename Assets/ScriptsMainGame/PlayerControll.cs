@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -140,12 +140,20 @@ public class PlayerControll : MonoBehaviour
         }
     }
 
+    private bool IsUIBlocking => (UI_Inventory.Instance != null && UI_Inventory.Instance.IsOpen) || 
+                                 (UI_Chest.Instance != null && UI_Chest.Instance.IsOpen);
+
     void Update()
     {
         if (isDead) return;
-        if (UI_Inventory.Instance != null && UI_Inventory.Instance.IsOpen)
+        if (IsUIBlocking)
         {
             movement = Vector2.zero;
+            if (animator != null)
+            {
+                animator.SetBool(IsMovingHash, false);
+                animator.SetFloat(SpeedHash, 0f);
+            }
             return;
         }
 
@@ -158,9 +166,9 @@ public class PlayerControll : MonoBehaviour
         if (isMoving)
         {
             if (Mathf.Abs(movement.x) > Mathf.Abs(movement.y))
-                _direction = movement.x < 0 ? 1 : 2; // 1 = Влево, 2 = Вправо
+                _direction = movement.x < 0 ? 1 : 2;
             else if (Mathf.Abs(movement.y) > 0.01f)
-                _direction = movement.y > 0 ? 3 : 0; // 3 = Вверх, 0 = Вниз
+                _direction = movement.y > 0 ? 3 : 0;
             else if (Mathf.Abs(movement.x) > 0.01f)
                 _direction = movement.x < 0 ? 1 : 2;
         }
@@ -173,8 +181,6 @@ public class PlayerControll : MonoBehaviour
             animator.SetFloat(MoveXHash, movement.x);
             animator.SetFloat(MoveYHash, movement.y);
         }
-
-        // Проверяем нажатие ЛКМ, готовность кулдауна и отсутствие клика по UI
         if (Input.GetMouseButtonDown(0))
         {
             if (UnityEngine.EventSystems.EventSystem.current != null && 
@@ -195,7 +201,7 @@ public class PlayerControll : MonoBehaviour
     {
         if (isDead) return;
 
-        if (UI_Inventory.Instance != null && UI_Inventory.Instance.IsOpen)
+        if (IsUIBlocking)
         {
             if (rb != null) rb.linearVelocity = Vector2.zero;
             return;
@@ -283,6 +289,7 @@ public class PlayerControll : MonoBehaviour
 
     public void Shoot()
     {
+        if (IsUIBlocking) return;
         if (Time.time < nextShootTime) return;
         nextShootTime = Time.time + shootCooldown;
         
