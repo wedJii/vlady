@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae30fe61d31494f44a515e25298e3fca, type: 3}
   m_Name: Ricochet Plate
   m_EditorClassIdentifier: Assembly-CSharp::RicochetPlate
-  id: 
-  displayName: 
+  id: ricochet
+  displayName: Ricochet Plate
   icon: {fileID: 0}
   description: 
   isStackable: 0

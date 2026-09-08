@@ -88,6 +88,8 @@ public class PlayerControll : MonoBehaviour
         get => _currentHealth_Player;
         set
         {
+            value = Mathf.Min(value, maxHealth_Player);
+
             if (_currentHealth_Player != value)
             {
                 if (value < _currentHealth_Player && value > 0 && !isDead)

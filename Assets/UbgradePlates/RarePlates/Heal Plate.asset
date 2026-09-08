@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cf5531c267de524ab9c8942b403703e, type: 3}
   m_Name: Heal Plate
   m_EditorClassIdentifier: Assembly-CSharp::NewMonoBehaviourScript
-  id: 
-  displayName: 
+  id: heal
+  displayName: Heal Plate
   icon: {fileID: 0}
   description: 
   isStackable: 0

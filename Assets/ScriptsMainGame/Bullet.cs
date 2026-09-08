@@ -7,6 +7,7 @@ public class Bullet : MonoBehaviour
     private PlayerControll playerScript;
     private Rigidbody2D rb;
     public bool isDuplicate = false;
+    public bool isRicochet = false;
     
     public event Action<Enemy> OnHitEnemy;
 
@@ -57,7 +58,7 @@ public class Bullet : MonoBehaviour
         // Разрушение о твердые препятствия
         if (!other.isTrigger)
         {
-            Destroy(gameObject);
+            if (!isRicochet) Destroy(gameObject);
         }
     }
 }
