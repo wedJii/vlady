@@ -3,6 +3,8 @@ using UnityEngine;
 public abstract class UbgradePlate : Item
 {
     public string PlateRarity;
+
+    public PlateRarity RarityTier => System.Enum.TryParse<PlateRarity>(PlateRarity, true, out var r) ? r : global::PlateRarity.Common;
     private void OnValidate()
     {
         isStackable = false;

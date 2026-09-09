@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    [Header("Inventory Capacity")]
+    [Header("Вместимость")]
     public int capacity = 20;
     public List<InventorySlot> slots = new();
 
-    [Header("Plate Slots (Equipment)")]
+    [Header("Слоты пластин")]
     public int plateCapacity = 3;
     public List<InventorySlot> plateSlots = new();
 
@@ -18,6 +18,8 @@ public class Inventory : MonoBehaviour
     public IReadOnlyList<InventorySlot> PlateSlots => plateSlots;
 
     public event Action OnInventoryChanged;
+
+    public void NotifyInventoryChanged() => OnInventoryChanged?.Invoke();
 
     private void Awake()
     {
@@ -230,6 +232,17 @@ public class Inventory : MonoBehaviour
 
         if (player == null) player = FindFirstObjectByType<PlayerControll>();
 
+        if (from.item is CoinItem || (from.item != null && from.item.id == "coin"))
+        {
+            if (player != null)
+            {
+                player.CurrentCoins += from.amount;
+                from.Clear();
+                OnInventoryChanged?.Invoke();
+                return;
+            }
+        }
+
         // Если оба обычных слота содержат одинаковый стакаемый предмет -> объединяем
         if (!fromIsPlate && !toIsPlate && !to.IsEmpty && from.item == to.item && to.item.isStackable)
         {
@@ -342,6 +355,18 @@ public class Inventory : MonoBehaviour
 
         var item = from.item;
         int amount = from.amount;
+
+        if (item is CoinItem || (item != null && item.id == "coin"))
+        {
+            if (player != null)
+            {
+                player.CurrentCoins += amount;
+                from.Clear();
+                OnInventoryChanged?.Invoke();
+                targetInventory.OnInventoryChanged?.Invoke();
+                return true;
+            }
+        }
 
         // Если переносим из слота пластины в другой инвентарь или наоборот
         if (fromIsPlate && item is UbgradePlate plate && player != null)

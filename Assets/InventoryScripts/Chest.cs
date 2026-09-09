@@ -9,18 +9,64 @@ using DG.Tweening;
 [RequireComponent(typeof(Collider2D))]
 public class Chest : MonoBehaviour
 {
-    [Header("Chest Configuration")]
+    [Header("Настройки сундука")]
     [SerializeField] private int capacity = 15;
     [SerializeField] private float interactionRadius = 2.8f;
     [SerializeField] private KeyCode interactionKey = KeyCode.E;
 
-    [Header("Starter Items (Optional, not random)")]
+    [Header("Стартовые вещи")]
     [SerializeField] private List<LobbyMenuManager.StarterItemEntry> starterItems = new();
 
-    [Header("Visual Feedback")]
+    [Header("Внешний вид")]
     [SerializeField] private Sprite closedSprite;
     [SerializeField] private Sprite openSprite;
     [SerializeField] private GameObject interactionPrompt;
+
+    [Header("Настройки лута")]
+    [Tooltip("Спавнить вещи на старте")]
+    [SerializeField] private bool enableRandomLoot = true;
+
+    [Tooltip("Макс предметов")]
+    [SerializeField, Min(1)] private int maxLootItems = 2;
+
+    [Tooltip("Шанс на след предмет")]
+    [SerializeField, Range(0f, 100f)] private float nextItemChance = 20f;
+
+    [Header("Шанс 50 на 50")]
+    [Tooltip("Шанс на пластину")]
+    [SerializeField, Range(0f, 100f)] private float plateChance = 50f;
+
+    [Tooltip("Шанс на монеты")]
+    [SerializeField, Range(0f, 100f)] private float coinChance = 50f;
+
+    [Header("Шансы пластин")]
+    [Tooltip("Обычная (80%)")]
+    [SerializeField, Range(0f, 100f)] private float commonPlateChance = 80f;
+
+    [Tooltip("Редкая (17%)")]
+    [SerializeField, Range(0f, 100f)] private float rarePlateChance = 17f;
+
+    [Tooltip("Легендарка (2.5%)")]
+    [SerializeField, Range(0f, 100f)] private float legendaryPlateChance = 2.5f;
+
+    [Tooltip("Мифик (0.5%)")]
+    [SerializeField, Range(0f, 100f)] private float mythicPlateChance = 0.5f;
+
+    [Header("Настройки монет")]
+    [Tooltip("Мин монет")]
+    [SerializeField, Min(1)] private int minCoins = 5;
+
+    [Tooltip("Макс монет")]
+    [SerializeField, Min(1)] private int maxCoins = 10;
+
+    [Tooltip("Предмет монеты")]
+    [SerializeField] private Item coinItem;
+
+    [Header("Списки пластин")]
+    [SerializeField] private List<UbgradePlate> commonPlates = new();
+    [SerializeField] private List<UbgradePlate> rarePlates = new();
+    [SerializeField] private List<UbgradePlate> legendaryPlates = new();
+    [SerializeField] private List<UbgradePlate> mythicPlates = new();
 
     private Inventory _inventory;
     private SpriteRenderer _sr;
@@ -37,6 +83,57 @@ public class Chest : MonoBehaviour
     public bool IsOpen => _isOpen;
     public int Capacity => capacity;
 
+    private void OnValidate()
+    {
+        if (minCoins < 1) minCoins = 1;
+        if (maxCoins < minCoins) maxCoins = minCoins;
+
+#if UNITY_EDITOR
+        if (!Application.isPlaying && commonPlates.Count == 0 && rarePlates.Count == 0)
+        {
+            AutoPopulatePlates();
+        }
+#endif
+    }
+
+#if UNITY_EDITOR
+    [ContextMenu("Найти пластины")]
+    public void AutoPopulatePlates()
+    {
+        commonPlates.Clear();
+        rarePlates.Clear();
+        legendaryPlates.Clear();
+        mythicPlates.Clear();
+
+        string[] guids = UnityEditor.AssetDatabase.FindAssets("t:UbgradePlate");
+        foreach (string guid in guids)
+        {
+            string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+            var plate = UnityEditor.AssetDatabase.LoadAssetAtPath<UbgradePlate>(path);
+            if (plate == null) continue;
+
+            string rarityStr = plate.PlateRarity?.Trim().ToLowerInvariant() ?? "";
+            if (rarityStr.Contains("common")) commonPlates.Add(plate);
+            else if (rarityStr.Contains("rare")) rarePlates.Add(plate);
+            else if (rarityStr.Contains("legend")) legendaryPlates.Add(plate);
+            else if (rarityStr.Contains("mythic")) mythicPlates.Add(plate);
+            else commonPlates.Add(plate);
+        }
+
+        if (coinItem == null)
+        {
+            string[] coinGuids = UnityEditor.AssetDatabase.FindAssets("t:CoinItem");
+            if (coinGuids.Length > 0)
+            {
+                string cPath = UnityEditor.AssetDatabase.GUIDToAssetPath(coinGuids[0]);
+                coinItem = UnityEditor.AssetDatabase.LoadAssetAtPath<Item>(cPath);
+            }
+        }
+
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
+#endif
+
     private void Awake()
     {
         _inventory = GetComponent<Inventory>() ?? gameObject.AddComponent<Inventory>();
@@ -52,13 +149,155 @@ public class Chest : MonoBehaviour
             _sr.sprite = closedSprite;
 
         EnsurePrompt();
+
+        if (enableRandomLoot)
+        {
+            GenerateRandomLoot();
+        }
     }
 
     private void Start()
     {
-        InitStarterItems();
+        if (!enableRandomLoot)
+            InitStarterItems();
+
         if (_sr != null)
             _sr.sortingOrder = 1000 + Mathf.RoundToInt(-transform.position.y * 100);
+    }
+
+    public void GenerateRandomLoot()
+    {
+        if (_initialized) return;
+        _initialized = true;
+
+        if (_inventory == null)
+        {
+            _inventory = GetComponent<Inventory>() ?? gameObject.AddComponent<Inventory>();
+            _inventory.capacity = capacity;
+            _inventory.EnsureCapacity();
+        }
+
+        if (maxLootItems <= 0) return;
+
+        int spawnedCount = 0;
+
+        SpawnSingleLootItem();
+        spawnedCount++;
+
+        while (spawnedCount < maxLootItems)
+        {
+            float roll = Random.Range(0f, 100f);
+            if (roll <= nextItemChance)
+            {
+                SpawnSingleLootItem();
+                spawnedCount++;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    private void SpawnSingleLootItem()
+    {
+        float totalTypeChance = plateChance + coinChance;
+        if (totalTypeChance <= 0f) return;
+
+        float rollType = Random.Range(0f, totalTypeChance);
+        if (rollType < plateChance)
+        {
+            SpawnPlate();
+        }
+        else
+        {
+            SpawnCoins();
+        }
+    }
+
+    private void SpawnPlate()
+    {
+        PlateRarity selectedRarity = RollRarity();
+        UbgradePlate plate = GetPlateByRarityWithFallback(selectedRarity);
+
+        if (plate != null)
+        {
+            _inventory.AddItem(plate, 1);
+        }
+    }
+
+    private PlateRarity RollRarity()
+    {
+        float totalRarity = commonPlateChance + rarePlateChance + legendaryPlateChance + mythicPlateChance;
+        if (totalRarity <= 0f) totalRarity = 100f;
+
+        float roll = Random.Range(0f, totalRarity);
+
+        if (roll < commonPlateChance)
+            return PlateRarity.Common;
+        roll -= commonPlateChance;
+
+        if (roll < rarePlateChance)
+            return PlateRarity.Rare;
+        roll -= rarePlateChance;
+
+        if (roll < legendaryPlateChance)
+            return PlateRarity.Legendary;
+
+        return PlateRarity.Mythic;
+    }
+
+    private UbgradePlate GetPlateByRarityWithFallback(PlateRarity rarity)
+    {
+        List<UbgradePlate> pool = GetPoolForRarity(rarity);
+
+        if (pool == null || pool.Count == 0)
+        {
+            if (rarity == PlateRarity.Mythic)
+                pool = GetPoolForRarity(PlateRarity.Legendary);
+
+            if ((pool == null || pool.Count == 0) && (rarity == PlateRarity.Mythic || rarity == PlateRarity.Legendary))
+                pool = GetPoolForRarity(PlateRarity.Rare);
+
+            if (pool == null || pool.Count == 0)
+                pool = GetPoolForRarity(PlateRarity.Common);
+        }
+
+        if (pool != null && pool.Count > 0)
+        {
+            var validPlates = pool.FindAll(p => p != null);
+            if (validPlates.Count > 0)
+            {
+                int index = Random.Range(0, validPlates.Count);
+                return validPlates[index];
+            }
+        }
+
+        return null;
+    }
+
+    private List<UbgradePlate> GetPoolForRarity(PlateRarity rarity)
+    {
+        return rarity switch
+        {
+            PlateRarity.Common => commonPlates,
+            PlateRarity.Rare => rarePlates,
+            PlateRarity.Legendary => legendaryPlates,
+            PlateRarity.Mythic => mythicPlates,
+            _ => commonPlates
+        };
+    }
+
+    private void SpawnCoins()
+    {
+        if (coinItem == null)
+        {
+            Debug.LogWarning("Не выбрана монета!");
+            return;
+        }
+
+        int amount = Random.Range(minCoins, maxCoins + 1);
+        _inventory.AddItem(coinItem, amount);
     }
 
     private void InitStarterItems()

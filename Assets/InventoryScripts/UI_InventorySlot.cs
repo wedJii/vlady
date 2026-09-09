@@ -7,19 +7,19 @@ using DG.Tweening;
 [RequireComponent(typeof(CanvasGroup))]
 public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
-    [Header("UI Elements")]
+    [Header("Элементы UI")]
     [SerializeField] private Image icon;
     [SerializeField] private TextMeshProUGUI amountText;
     [SerializeField] private Image backgroundImage;
 
-    [Header("Slot Mode")]
+    [Header("Режим слота")]
     [SerializeField] private bool isPlateSlot = false;
 
     private int _slotIndex;
     private UI_Inventory _uiInventory;
     private CanvasGroup _canvasGroup;
     private Tween _hoverTween;
-    [Header("Colors (Inspector)")]
+    [Header("Цвета")]
     [SerializeField] private Color normalBgColor = new(0.16f, 0.18f, 0.24f, 0.95f);
     [SerializeField] private Color plateBgColor = new(0.12f, 0.28f, 0.38f, 0.98f);
     [SerializeField] private Color placeholderNormalColor = new(0.25f, 0.55f, 0.85f, 0.85f);
@@ -153,6 +153,28 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (_uiInventory != null && _uiInventory.Inventory != null)
+        {
+            var list = _uiInventory.Inventory.GetSlotList(isPlateSlot);
+            if (_slotIndex >= 0 && _slotIndex < list.Count)
+            {
+                var slot = list[_slotIndex];
+                if (slot != null && !slot.IsEmpty && (slot.item is CoinItem || (slot.item != null && slot.item.id == "coin")))
+                {
+                    var player = FindFirstObjectByType<PlayerControll>();
+                    if (player != null)
+                    {
+                        player.CurrentCoins += slot.amount;
+                        slot.Clear();
+                        UI_ItemTooltip.Hide();
+                        _uiInventory.Inventory.NotifyInventoryChanged();
+                        _uiInventory.UpdateUI();
+                        return;
+                    }
+                }
+            }
+        }
+
         if (eventData.button == PointerEventData.InputButton.Right)
         {
             _uiInventory?.QuickTransfer(_slotIndex, isPlateSlot);
@@ -206,7 +228,20 @@ public class UI_InventorySlot : MonoBehaviour, IBeginDragHandler, IDragHandler, 
 
             var draggedItem = sourceList[draggedSlot.SlotIndex]?.item;
 
-            
+            if (draggedItem is CoinItem || (draggedItem != null && draggedItem.id == "coin"))
+            {
+                var player = FindFirstObjectByType<PlayerControll>();
+                if (player != null)
+                {
+                    player.CurrentCoins += sourceList[draggedSlot.SlotIndex].amount;
+                    sourceList[draggedSlot.SlotIndex].Clear();
+                    draggedSlot.UIInventory?.Inventory?.NotifyInventoryChanged();
+                    draggedSlot.UIInventory?.UpdateUI();
+                    this._uiInventory?.UpdateUI();
+                    return;
+                }
+            }
+
             if (this.IsPlateSlot && draggedItem != null && !(draggedItem is UbgradePlate))
             {
                 RejectShake();
